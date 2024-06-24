@@ -1,10 +1,3 @@
-<launch>
-	<node name="image_processing_node" pkg="eve_main" type="image_processing_node" output="screen">
-	</node>
-	
-	<node name="motor_node" pkg="eve_main" type="motor_node" output="screen">
-	</node>
-
-	<node name="eve_main_node" pkg="eve_main" type="eve_main_node" output="screen">
-	</node>
-</launch>
+version https://git-lfs.github.com/spec/v1
+oid sha256:bdcc03511570ec8ffab7e6c2ecaf4058427169cb96c5219743663b8b5ba291d3
+size 302

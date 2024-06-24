@@ -1,5 +1,3 @@
-# generated from catkin/cmake/template/order_packages.context.py.in
-source_root_dir = '/root/eve_ws/src'
-whitelisted_packages = ''.split(';') if '' != '' else []
-blacklisted_packages = ''.split(';') if '' != '' else []
-underlay_workspaces = '/root/eve_ws/devel;/opt/ros/noetic'.split(';') if '/root/eve_ws/devel;/opt/ros/noetic' != '' else []
+version https://git-lfs.github.com/spec/v1
+oid sha256:887470a6e3d475c288a5e9087552f05bba9362ded564c2834e050fe3debd75ba
+size 343

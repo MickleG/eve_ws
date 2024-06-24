@@ -1,8 +1,3 @@
-# generated from catkin/cmake/template/pkg.context.pc.in
-CATKIN_PACKAGE_PREFIX = ""
-PROJECT_PKG_CONFIG_INCLUDE_DIRS = "${prefix}/include".split(';') if "${prefix}/include" != "" else []
-PROJECT_CATKIN_DEPENDS = "dynamixel_sdk;roscpp;std_msgs;message_runtime".replace(';', ' ')
-PKG_CONFIG_LIBRARIES_WITH_PREFIX = "-leve_main".split(';') if "-leve_main" != "" else []
-PROJECT_NAME = "eve_main"
-PROJECT_SPACE_DIR = "/root/eve_ws/install"
-PROJECT_VERSION = "0.0.0"
+version https://git-lfs.github.com/spec/v1
+oid sha256:00a482e0a2a99e82ca0d057e50b5da48c2b55d54bc1a990b27ba6cef35c73999
+size 461

@@ -1,8 +1,3 @@
-prefix=@PROJECT_SPACE_DIR
-
-Name: @(CATKIN_PACKAGE_PREFIX + PROJECT_NAME)
-Description: Description of @PROJECT_NAME
-Version: @PROJECT_VERSION
-Cflags: @(' '.join(['-I%s' % include for include in PROJECT_PKG_CONFIG_INCLUDE_DIRS]))
-Libs: -L${prefix}/lib @(' '.join(PKG_CONFIG_LIBRARIES_WITH_PREFIX))
-Requires: @(PROJECT_CATKIN_DEPENDS)
+version https://git-lfs.github.com/spec/v1
+oid sha256:d5e8e692de670eba807b3a767138693e49cc6345f5dd290c6e5fc4f33a27162e
+size 332

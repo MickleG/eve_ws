@@ -1,4 +1,3 @@
-# generated from genmsg/cmake/pkg-msg-paths.cmake.installspace.in
-
-_prepend_path("${eve_main_DIR}/.." "msg" eve_main_MSG_INCLUDE_DIRS UNIQUE)
-set(eve_main_MSG_DEPENDENCIES std_msgs)
+version https://git-lfs.github.com/spec/v1
+oid sha256:2f8230102bee3af5a89f1e0888cc59d3be576da2d7ea896db6c91ca141dbc19c
+size 182

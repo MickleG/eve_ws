@@ -1,10 +1,3 @@
-file(REMOVE_RECURSE
-  "/root/eve_ws/devel/lib/eve_main/test_node"
-  "/root/eve_ws/devel/lib/eve_main/test_node.pdb"
-  "CMakeFiles/test_node.dir/src/test_node.cpp.o"
-)
-
-# Per-language clean rules from dependency scanning.
-foreach(lang CXX)
-  include(CMakeFiles/test_node.dir/cmake_clean_${lang}.cmake OPTIONAL)
-endforeach()
+version https://git-lfs.github.com/spec/v1
+oid sha256:ffa189b5126ddcd1175630c3966305b8a89c876948e67c16f0ae1370eb38d284
+size 323

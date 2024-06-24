@@ -1,7 +1,3 @@
-# CMake generated Testfile for 
-# Source directory: /usr/src/googletest
-# Build directory: /root/eve_ws/build/gtest
-# 
-# This file includes the relevant testing commands required for 
-# testing this directory and lists subdirectories to be tested as well.
-subdirs("googlemock")
+version https://git-lfs.github.com/spec/v1
+oid sha256:1f7379218b0c1b29a795d213829cbe59cfbd6411ec31846998af096cb7f6df6e
+size 278

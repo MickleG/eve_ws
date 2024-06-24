@@ -1,2 +1,3 @@
-- setup-file:
-    local-name: /root/eve_ws/install/setup.sh
+version https://git-lfs.github.com/spec/v1
+oid sha256:1a4a30f303420533b83d087f38e37ee929145124b30c70a6da597b3e90d3030f
+size 60

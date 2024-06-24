@@ -1,15 +1,3 @@
-set(CMAKE_HOST_SYSTEM "Linux-6.6.31+rpt-rpi-2712")
-set(CMAKE_HOST_SYSTEM_NAME "Linux")
-set(CMAKE_HOST_SYSTEM_VERSION "6.6.31+rpt-rpi-2712")
-set(CMAKE_HOST_SYSTEM_PROCESSOR "aarch64")
-
-
-
-set(CMAKE_SYSTEM "Linux-6.6.31+rpt-rpi-2712")
-set(CMAKE_SYSTEM_NAME "Linux")
-set(CMAKE_SYSTEM_VERSION "6.6.31+rpt-rpi-2712")
-set(CMAKE_SYSTEM_PROCESSOR "aarch64")
-
-set(CMAKE_CROSSCOMPILING "FALSE")
-
-set(CMAKE_SYSTEM_LOADED 1)
+version https://git-lfs.github.com/spec/v1
+oid sha256:d65daf61162590a154d120ddfc2343955597ddd894e497d54b36fd125d44c19c
+size 412

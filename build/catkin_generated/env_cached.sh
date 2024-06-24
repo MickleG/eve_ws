@@ -1,16 +1,3 @@
-#!/usr/bin/env sh
-# generated from catkin/cmake/templates/env.sh.in
-
-if [ $# -eq 0 ] ; then
-  /bin/echo "Usage: env.sh COMMANDS"
-  /bin/echo "Calling env.sh without arguments is not supported anymore. Instead spawn a subshell and source a setup file manually."
-  exit 1
-fi
-
-# ensure to not use different shell type which was set before
-CATKIN_SHELL=sh
-
-# source setup_cached.sh from same directory as this file
-_CATKIN_SETUP_DIR=$(cd "`dirname "$0"`" > /dev/null && pwd)
-. "$_CATKIN_SETUP_DIR/setup_cached.sh"
-exec "$@"
+version https://git-lfs.github.com/spec/v1
+oid sha256:f67279cf19914ed417aa36c54a85b5d4e73548e0f37c19b8d03ce939481203ba
+size 520

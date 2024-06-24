@@ -1,10 +1,3 @@
-file(REMOVE_RECURSE
-  "../../bin/libgmock.pdb"
-  "../lib/libgmock.so"
-  "CMakeFiles/gmock.dir/src/gmock-all.cc.o"
-)
-
-# Per-language clean rules from dependency scanning.
-foreach(lang CXX)
-  include(CMakeFiles/gmock.dir/cmake_clean_${lang}.cmake OPTIONAL)
-endforeach()
+version https://git-lfs.github.com/spec/v1
+oid sha256:a364476709426a2dfac42d93db2325e29b500298e2d6410846ab53768ca2f3ac
+size 268

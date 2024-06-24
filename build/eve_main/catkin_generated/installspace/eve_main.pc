@@ -1,8 +1,3 @@
-prefix=/root/eve_ws/install
-
-Name: eve_main
-Description: Description of eve_main
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib -leve_main
-Requires: dynamixel_sdk roscpp std_msgs message_runtime
+version https://git-lfs.github.com/spec/v1
+oid sha256:5747911483ccd74ecdafbfa55c71e07387f8cdbdc504dc668c7ec06860b0959a
+size 213

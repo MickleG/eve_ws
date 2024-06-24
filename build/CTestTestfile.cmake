@@ -1,8 +1,3 @@
-# CMake generated Testfile for 
-# Source directory: /root/eve_ws/src
-# Build directory: /root/eve_ws/build
-# 
-# This file includes the relevant testing commands required for 
-# testing this directory and lists subdirectories to be tested as well.
-subdirs("gtest")
-subdirs("eve_main")
+version https://git-lfs.github.com/spec/v1
+oid sha256:89979e13d27b138805125e22105625a979491a88866d85ef542251023754e2da
+size 284
