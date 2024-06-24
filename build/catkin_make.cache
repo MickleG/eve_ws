@@ -1,2 +1,0 @@
-eve_main
--DCATKIN_DEVEL_PREFIX=/root/eve_ws/devel -DCMAKE_INSTALL_PREFIX=/root/eve_ws/install -G Unix Makefiles
