@@ -1,3 +1,9 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6a4dca8c1b6ad31db509cbd80b9f9bc5bca2346338d9d20a7386d0117109c3a9
-size 327
+file(REMOVE_RECURSE
+  "/root/eve_ws/devel/share/common-lisp/ros/eve_main/msg/EndEffectorPosition.lisp"
+  "CMakeFiles/eve_main_generate_messages_lisp"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang )
+  include(CMakeFiles/eve_main_generate_messages_lisp.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

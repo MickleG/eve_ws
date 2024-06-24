@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f2a6465f35b3bc4370c566301f63e43397096098ca5bda28af4789f82fbd092b
-size 377
+file(REMOVE_RECURSE
+  "/root/eve_ws/devel/share/roseus/ros/eve_main/manifest.l"
+  "/root/eve_ws/devel/share/roseus/ros/eve_main/msg/EndEffectorPosition.l"
+  "CMakeFiles/eve_main_generate_messages_eus"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang )
+  include(CMakeFiles/eve_main_generate_messages_eus.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

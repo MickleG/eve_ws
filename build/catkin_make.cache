@@ -1,3 +1,2 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5d718cc2b2a7a92801a09f51d081afab8521550448ae3517c44af9d8a6548021
-size 111
+eve_main
+-DCATKIN_DEVEL_PREFIX=/root/eve_ws/devel -DCMAKE_INSTALL_PREFIX=/root/eve_ws/install -G Unix Makefiles

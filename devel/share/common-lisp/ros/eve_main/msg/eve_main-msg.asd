@@ -1,3 +1,9 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3e3b9ecb3944d75854216ca27a1da02f5a50af10d7d171b091523a6d274d5cf7
-size 289
+
+(cl:in-package :asdf)
+
+(defsystem "eve_main-msg"
+  :depends-on (:roslisp-msg-protocol :roslisp-utils )
+  :components ((:file "_package")
+    (:file "EndEffectorPosition" :depends-on ("_package_EndEffectorPosition"))
+    (:file "_package_EndEffectorPosition" :depends-on ("_package"))
+  ))

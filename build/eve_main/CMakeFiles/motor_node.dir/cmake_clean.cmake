@@ -1,3 +1,12 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:61ae85fbcb8fd15a861df350dec1eaf15b41bbd0a891083335a5a2b4eddc99cc
-size 438
+file(REMOVE_RECURSE
+  "/root/eve_ws/devel/lib/eve_main/motor_node"
+  "/root/eve_ws/devel/lib/eve_main/motor_node.pdb"
+  "CMakeFiles/motor_node.dir/src/EndEffectorConfig.cpp.o"
+  "CMakeFiles/motor_node.dir/src/MotorConfig.cpp.o"
+  "CMakeFiles/motor_node.dir/src/motor_node.cpp.o"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/motor_node.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

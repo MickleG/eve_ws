@@ -1,3 +1,9 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2d91b168cea368c1f51799d02c7cf88aedf27ca3da4f693e354a70584f8b1768
-size 349
+#!/usr/bin/env sh
+# generated from catkin/cmake/template/local_setup.sh.in
+
+# since this file is sourced either use the provided _CATKIN_SETUP_DIR
+# or fall back to the destination set at configure time
+: ${_CATKIN_SETUP_DIR:=/root/eve_ws/devel}
+CATKIN_SETUP_UTIL_ARGS="--extend --local"
+. "$_CATKIN_SETUP_DIR/setup.sh"
+unset CATKIN_SETUP_UTIL_ARGS

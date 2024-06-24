@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5c48fa02beec642184be69e2f192c3ad0b4de62a4b11f0bc130bbd294119695d
-size 289
+file(REMOVE_RECURSE
+  "../../bin/libgmock_main.pdb"
+  "../lib/libgmock_main.so"
+  "CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/gmock_main.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

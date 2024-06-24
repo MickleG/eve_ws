@@ -1,3 +1,8 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bbed61e491f169e5e065a531931720fd335b1c8fa1d3ad16f050d0dbd60f5d6f
-size 256
+prefix=/root/eve_ws/devel
+
+Name: eve_main
+Description: Description of eve_main
+Version: 0.0.0
+Cflags: -I/root/eve_ws/devel/include -I/root/eve_ws/src/eve_main/include
+Libs: -L${prefix}/lib -leve_main
+Requires: dynamixel_sdk roscpp std_msgs message_runtime

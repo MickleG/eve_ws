@@ -1,3 +1,5 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:fef3268c7cee3b2960529f5f5f767b7c20dc299bd9a4cecfc843fef94f559f8a
-size 172
+
+# Per-language clean rules from dependency scanning.
+foreach(lang )
+  include(CMakeFiles/roscpp_generate_messages_eus.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
