@@ -1,0 +1,3 @@
+float32 xPosition
+float32 yPosition
+float32 zPosition

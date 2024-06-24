@@ -1,0 +1,8 @@
+prefix=/root/eve_ws/install
+
+Name: eve_main
+Description: Description of eve_main
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib -leve_main
+Requires: dynamixel_sdk roscpp std_msgs message_runtime
