@@ -832,22 +832,6 @@ cmath
 eve_main/MotorConfig.h
 /root/eve_ws/src/eve_main/src/eve_main/MotorConfig.h
 
-/root/eve_ws/src/eve_main/src/MotorConfig.cpp
-eve_main/MotorConfig.h
-/root/eve_ws/src/eve_main/src/eve_main/MotorConfig.h
-stdint.h
--
-stdlib.h
--
-stdio.h
--
-wiringPi.h
--
-time.h
--
-cmath
--
-
 /root/eve_ws/src/eve_main/src/motor_node.cpp
 ros/ros.h
 /root/eve_ws/src/eve_main/src/ros/ros.h

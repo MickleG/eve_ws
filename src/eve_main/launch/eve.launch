@@ -1,7 +1,7 @@
 <launch>
 	<node name="image_processing_node" pkg="eve_main" type="image_processing_node" output="screen">
 	</node>
-	
+
 	<node name="motor_node" pkg="eve_main" type="motor_node" output="screen">
 	</node>
 

@@ -31,9 +31,8 @@ float dropZoneX = 0;
 float dropZoneZ = 150;
 float goToPositionSpeed = 150;
 
-int vAvg = 0;
-int harvestCount = 0;
 
+int harvestCount = 0;
 int curLimit = 30;
 int goalCur = 200;
 
@@ -55,9 +54,6 @@ void updateHarvestZoneDetected(const std_msgs::Bool::ConstPtr& msg) {
 	harvestZoneDetected = msg -> data;
 }
 
-void updateVAvg(const std_msgs::Int32::ConstPtr& msg) {
-	vAvg = msg -> data;
-}
 
 int main(int argc, char **argv) {
 	// Starting ROS
@@ -73,7 +69,6 @@ int main(int argc, char **argv) {
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber harvestZoneDetectedSub = nh.subscribe("harvest_zone_detected", 10, updateHarvestZoneDetected);
-	ros::Subscriber vAvgSub = nh.subscribe("v_avg", 10, updateVAvg);
 
 	// Establishing ROS Client for Service calls
 	ros::ServiceClient getPositionClient = nh.serviceClient<eve_main::GetPosition>("get_position");
@@ -129,84 +124,86 @@ int main(int argc, char **argv) {
 
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
-			for(int i = 0; i < 1500; i++) {
-				liftingY = true;
-				liftingYMsg.data = liftingY;
-				liftingYPub.publish(liftingYMsg);
+			break;
 
-				ros::spinOnce();
-				rate.sleep();
-			}
+			// for(int i = 0; i < 1100; i++) {
+			// 	liftingY = true;
+			// 	liftingYMsg.data = liftingY;
+			// 	liftingYPub.publish(liftingYMsg);
+
+			// 	ros::spinOnce();
+			// 	rate.sleep();
+			// }
 			
-			liftingY = false;
-			liftingYMsg.data = liftingY;
-			liftingYPub.publish(liftingYMsg);
+			// liftingY = false;
+			// liftingYMsg.data = liftingY;
+			// liftingYPub.publish(liftingYMsg);
 
-			ros::spinOnce();
-			rate.sleep();
+			// ros::spinOnce();
+			// rate.sleep();
 
-			std::cout << "y movement done, at top of cup" << std::endl;
-			std::cout << "gripping and cutting" << std::endl;
+			// std::cout << "y movement done, at top of cup" << std::endl;
+			// std::cout << "gripping and cutting" << std::endl;
 
-			if(!dryRunMode) {
-				grip(servo1, servo2);
-				usleep(250000);
-				cutter.cutPlant();
-				usleep(250000);
-			}
+			// if(!dryRunMode) {
+			// 	grip(servo1, servo2);
+			// 	usleep(250000);
+			// 	cutter.cutPlant();
+			// 	usleep(250000);
+			// }
 
-			// Getting current position of end effector
-			getPositionClient.call(getPositionService);
+			// // Getting current position of end effector
+			// getPositionClient.call(getPositionService);
 
-			float currentX = getPositionService.response.xPosition;
-			currentY = getPositionService.response.yPosition;
-			float currentZ = getPositionService.response.zPosition;
+			// float currentX = getPositionService.response.xPosition;
+			// currentY = getPositionService.response.yPosition;
+			// float currentZ = getPositionService.response.zPosition;
 
 
-			// Returning to home
-			goToPositionService.request.desiredXPosition = dropZoneX;
-			goToPositionService.request.desiredZPosition = dropZoneZ;
-			goToPositionService.request.speed = goToPositionSpeed;
+			// // Returning to home
+			// goToPositionService.request.desiredXPosition = dropZoneX;
+			// goToPositionService.request.desiredZPosition = dropZoneZ;
+			// goToPositionService.request.speed = goToPositionSpeed;
 
-			goToPositionClient.call(goToPositionService);
+			// goToPositionClient.call(goToPositionService);
 
-			std::cout << "dropping" << std::endl;
-			drop(servo1, servo2);
-			usleep(250000);
+			// std::cout << "dropping" << std::endl;
+			// drop(servo1, servo2);
+			// usleep(250000);
 
-			std::cout << "returning to harvest zone" << std::endl;
+			// std::cout << "returning to harvest zone" << std::endl;
 
-			// Returning to plant vine
-			goToPositionService.request.desiredXPosition = currentX;
-			goToPositionService.request.desiredZPosition = currentZ;
-			goToPositionService.request.speed = goToPositionSpeed;
+			// // Returning to plant vine
+			// goToPositionService.request.desiredXPosition = currentX;
+			// goToPositionService.request.desiredZPosition = currentZ;
+			// goToPositionService.request.speed = goToPositionSpeed;
 
-			goToPositionClient.call(goToPositionService);
+			// goToPositionClient.call(goToPositionService);
 
-			harvestCount++;
+			// harvestCount++;
 
-			harvesting = false;
-			harvestingMsg.data = harvesting;
-			harvestingPub.publish(harvestingMsg);
-			ros::spinOnce();
+			// harvesting = false;
+			// harvestingMsg.data = harvesting;
+			// harvestingPub.publish(harvestingMsg);
+			// ros::spinOnce();
 
-			if(harvestCount == totalPlantsPerVine) {
-				columnDone = true;
-				break;
-			}
+			// if(harvestCount == totalPlantsPerVine) {
+			// 	columnDone = true;
+			// 	break;
+			// }
 			
-			while(abs(eeYPosition - currentY) <= 1500) {
-				liftingY = true;
-				liftingYMsg.data = true;
-				liftingYPub.publish(liftingYMsg);
+			// while(abs(eeYPosition - currentY) <= 1900) {
+			// 	liftingY = true;
+			// 	liftingYMsg.data = true;
+			// 	liftingYPub.publish(liftingYMsg);
 
-				ros::spinOnce();
-				rate.sleep();
-			}
+			// 	ros::spinOnce();
+			// 	rate.sleep();
+			// }
 
-			liftingY = false;
-			harvestZoneDetected = false;
-			harvesting = false;
+			// liftingY = false;
+			// harvestZoneDetected = false;
+			// harvesting = false;
 			
 			
 		}

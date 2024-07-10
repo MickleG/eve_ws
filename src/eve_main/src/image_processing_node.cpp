@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
 	ros::Publisher blueDetectedPub = nh.advertise<std_msgs::Bool>("blue_detected", 10);
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
-	ros::Publisher vAvgPub = nh.advertise<std_msgs::Int32>("v_avg", 10);
+	// ros::Publisher vAvgPub = nh.advertise<std_msgs::Int32>("v_avg", 10);
 	ros::Publisher goalZPub = nh.advertise<std_msgs::Int32>("goal_z", 10);
 	ros::Publisher xOffsetPub = nh.advertise<std_msgs::Int32>("x_offset", 10);
 
@@ -90,13 +90,14 @@ int main(int argc, char **argv) {
 	while(ros::ok()) {
 		std_msgs::Bool blueDetectedMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
-		std_msgs::Int32 vAvgMsg;
 		std_msgs::Int32 goalZMsg;
 		std_msgs::Int32 xOffsetMsg;
 
 		rs2::frameset frames = pipe.wait_for_frames();
 		frames = align_to_color.process(frames);
 
+
+		// collecting color and depth frames from RealSense camera
 		rs2::frame color_frame = frames.get_color_frame();
 		rs2::depth_frame depth_frame = frames.get_depth_frame().as<rs2::depth_frame>();
 
@@ -106,10 +107,6 @@ int main(int argc, char **argv) {
 		cv::Mat original_depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
 
 		//cv::imshow("original_image", original_rgb_image);
-
-		// Code for saving images
-		// cv::imwrite("/home/edengreen/eden_green_robotics/c++/eve_cpp_main/images/rgb_image" + to_string(counter) + ".png", original_rgb_image);
-		// cv::imwrite("/home/edengreen/eden_green_robotics/c++/eve_cpp_main/images/depth_image" + to_string(counter) + ".png", depth_image);
 
 		cv::Mat croppingMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
 
@@ -129,10 +126,10 @@ int main(int argc, char **argv) {
 		// cv::imshow("hsv", hsv_image);
 
 
-		// Creating Mask using HSV thresholding
+		// Creating cup mask using HSV thresholding
 		cv::Mat cupMaskBeforeLargest(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-		cv::Scalar lowerHSV(100, 200, 0);
-		cv::Scalar upperHSV(150, 255, 255);
+		cv::Scalar lowerHSV(100, 200, 0); // lower bound for cup
+		cv::Scalar upperHSV(150, 255, 255); // upper bound for cup
 		cv::inRange(hsv_image, lowerHSV, upperHSV, cupMaskBeforeLargest);
 
 		// cv::imshow("cupMaskBeforeLargest beforemorph", cupMaskBeforeLargest);
@@ -144,6 +141,8 @@ int main(int argc, char **argv) {
 
 		// cv::imshow("cupMaskBeforeLargest", cupMaskBeforeLargest);
 
+
+		// Cleaning up all noise by selecting the largest blob from the cup mask and discarding everything else
 		std::vector<std::vector<cv::Point>> contours;
 		std::vector<cv::Vec4i> hierarchy;
 		cv::findContours(cupMaskBeforeLargest, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -161,13 +160,14 @@ int main(int argc, char **argv) {
 
 		cv::Mat cupMask = cv::Mat::zeros(cupMaskBeforeLargest.size(), CV_8UC1);
 
+		// Adding only points part of largest blob to cupMask
 		if(largest_contour_index != -1) {
 			cv::drawContours(cupMask, contours, largest_contour_index, cv::Scalar(255), cv::FILLED);
 		}
 
 		// cv::imshow("cupMask", cupMask);
 
-		// Finding average location of cup and counting pixels in order to see if we arrived at harvesting location
+		// Finding average location of cup and counting pixels in order to see if cup is fully in image to stop
 		int totalCupPixels = 0;
 		float avgCupU = 0;
 		float avgCupV = 0;
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		// cv::imshow("cup", cupMask);
+		cv::imshow("cup", cupMask);
 
 
 		std::sort(cupPoints.begin(), cupPoints.end(), [](const int& a, const int& b) {
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		cv::imshow("vinemask premorph", vineMask);
+		// cv::imshow("vinemask premorph", vineMask);
 
 		// // Removing cups from vineMask to improve vine masking (as the gray color on the vines is a blue-based hue)
 		cv::subtract(vineMask, cupMask, vineMask);
@@ -325,10 +325,11 @@ int main(int argc, char **argv) {
 		}
 
 		cv::Mat smallest_values_filtered;
+
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		cv::imshow("vine_rib_filtered", smallest_values_filtered);
+		// cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;
@@ -364,19 +365,14 @@ int main(int argc, char **argv) {
 
 		cv::Point minLoc(min_z_u, min_z_v);
 
-		goalZ = minVal * 1000;
-
-		// cout << "goalZ: " << goalZ << endl;
+		goalZ = minVal * 1000; // converting to mm to send over ROS message
 
 		int avg_u = int((max_u + min_u) / 2);
 
-		xOffset = int(resolution[0] / 2) - avg_u;
+		xOffset = int(resolution[0] / 2) - avg_u; // subtracting u_centerOfImage from u_detectedVineRib to get the vine's u offset (pixels in horizontal direction)
 
-		// cout << "xOffset: " << xOffset << endl;
 
 		cv::Point centerX(avg_u, int(resolution[1] / 2));
-
-		// cv::circle(rgb_image, minLoc, 5, cv::Scalar(0, 255, 0), -1);
 		cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
 		cv::imshow("image", rgb_image);
@@ -386,13 +382,11 @@ int main(int argc, char **argv) {
 
 		blueDetectedMsg.data = blueDetected;
 		harvestZoneDetectedMsg.data = harvestZoneDetected;
-		vAvgMsg.data = v_avg;
 		goalZMsg.data = goalZ;
 		xOffsetMsg.data = xOffset;
 		
 		blueDetectedPub.publish(blueDetectedMsg);
 		harvestZoneDetectedPub.publish(harvestZoneDetectedMsg);
-		vAvgPub.publish(vAvgMsg);
 		goalZPub.publish(goalZMsg);
 		xOffsetPub.publish(xOffsetMsg);
 

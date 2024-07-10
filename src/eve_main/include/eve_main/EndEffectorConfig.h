@@ -15,7 +15,8 @@ class EndEffectorConfig
     private:
 
         const float stepPerRev = 3200.0;
-        const float revPerStep = 1.0 / stepPerRev;
+        const float yStageGearReduction = 10;
+        const float revPerStep = 1.0 / (stepPerRev * yStageGearReduction);
         const float mmPerRev = 25.0;
         const float mmPerRevY = 150.0;
         const float linkLength = 350.0;

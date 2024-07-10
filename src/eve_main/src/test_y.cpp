@@ -23,9 +23,6 @@ void updateEndEffectorPosition(const eve_main::EndEffectorPosition::ConstPtr& ms
 	eeZPosition = msg -> zPosition;
 }
 
-void updateCalibrationDone(const std_msgs::Bool::ConstPtr& msg) {
-	calibrationDone = msg->data;
-}
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "test_y");
@@ -35,7 +32,6 @@ int main(int argc, char **argv) {
 	ros::Publisher harvestingPub = nh.advertise<std_msgs::Bool>("harvesting", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
-	ros::Subscriber calibrationDoneSub = nh.subscribe("calibration_done", 10, updateCalibrationDone);
 
 	ros::ServiceClient client = nh.serviceClient<eve_main::GetPosition>("get_position");
 	eve_main::GetPosition srv;
@@ -43,45 +39,46 @@ int main(int argc, char **argv) {
 	ros::Rate rate(1000);
 
 
-	while(ros::ok()){
-		std_msgs::Bool harvestingMsg;
+	while(ros::ok()) {
+
 		std_msgs::Bool liftingYMsg;
-		
-		if(calibrationDone && !liftingDone) {
-			harvestingMsg.data = harvesting;
-			harvestingPub.publish(harvestingMsg);
-		
-			client.call(srv);
-			currentY = srv.response.yPosition;
+		std_msgs::Bool harvestingMsg;
 
-			std::cout << "Y BEFORE MOVE: " << currentY << std::endl;		
+		harvesting = true;
+		harvestingMsg.data = true;
+		harvestingPub.publish(harvestingMsg);
+
+		currentY = srv.response.yPosition;
+
+		std::cout << "Y BEFORE MOVE: " << currentY << std::endl;
 			
-			while(abs(eeYPosition - currentY) <= 1130) {
-				std::cout << "yDiff: " << abs(eeYPosition - currentY) << std::endl;
-				liftingY = true;
-				liftingYMsg.data = liftingY;
-				liftingYPub.publish(liftingYMsg);
-
-				ros::spinOnce();
-				rate.sleep();
-			}
-
-			liftingDone = true;
-
-			usleep(5000);
-
-			liftingY = false;
+		while(abs(eeYPosition - currentY) <= 100) {
+			// std::cout << "yDiff: " << abs(eeYPosition - currentY) << std::endl;
+			liftingY = true;
 			liftingYMsg.data = liftingY;
 			liftingYPub.publish(liftingYMsg);
 
-			client.call(srv);
-			currentY = srv.response.yPosition;
-			std::cout << "Y AFTER MOVE: " << currentY << std::endl;
+			ros::spinOnce();
+			rate.sleep();
 		}
+
+		liftingY = false;
+		liftingYMsg.data = liftingY;
+		liftingYPub.publish(liftingYMsg);
+
+		client.call(srv);
+		currentY = srv.response.yPosition;
+		std::cout << "Y AFTER MOVE: " << currentY << std::endl;
 
 		ros::spinOnce();
 		rate.sleep();
+
+		break;
 	}
 
+	
 	return(0);
 }
+
+	
+
