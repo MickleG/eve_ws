@@ -27,10 +27,7 @@ class Cutter
 
         void setAttempts(uint8_t newAttempts);
         void cutPlant();
-				void resetCut();
-        double distance(float* pt1, float* pt2);
-        // double mean(std::vector<int>& v);
-        bool fiducials();
+		void resetCut();
 };
 
 #endif // CUTTER_H

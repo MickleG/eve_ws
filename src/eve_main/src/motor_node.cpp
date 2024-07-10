@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
-	ros::Publisher calibrationDonePub = nh.advertise<std_msgs::Bool>("calibration_done", 10);
+	// ros::Publisher calibrationDonePub = nh.advertise<std_msgs::Bool>("calibration_done", 10);
 	
 	ros::ServiceServer getPositionService = nh.advertiseService("get_position", getPosition);
 	ros::ServiceServer goToPositionService = nh.advertiseService("go_to_position", goToPosition);
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 	mechanism.yMotor.setSpeed(90);
 	mechanism.yMotor.setAcceleration(10);
 
-	calibrationDone = true;
+	// calibrationDone = true;
 
 	while(ros::ok() && !columnDone) {
 		eve_main::EndEffectorPosition endEffectorPositionMsg;
@@ -184,11 +184,11 @@ int main(int argc, char **argv) {
 		endEffectorPositionMsg.zPosition = mechanism.zPosition;
 
 		initialCenteringDoneMsg.data = initialCenteringDone;
-		calibrationDoneMsg.data = calibrationDone;
+		// calibrationDoneMsg.data = calibrationDone;
 
 		endEffectorPositionPub.publish(endEffectorPositionMsg);
 		initialCenteringDonePub.publish(initialCenteringDoneMsg);
-		calibrationDonePub.publish(calibrationDoneMsg);
+		// calibrationDonePub.publish(calibrationDoneMsg);
 
 		ros::spinOnce();
 		rate.sleep();

@@ -388,87 +388,16 @@ void grip(MotorXM430 servo1, MotorXM430 servo2)
 
 	while((abs(servo1.ReadAngle() - rightClosed) >= tolerance && abs(servo2.ReadAngle() - leftClosed) >= tolerance) && servo1.ReadCurrent() <= servo1.m_current_limit && servo2.ReadCurrent() <= servo2.m_current_limit)
 	{
-		// cout << "servo1 Angle: " << servo1.ReadAngle() << ", servo1 closed angle: " << rightClosed << ", abs(difference): " << abs(servo1.ReadAngle() - rightClosed) << ", tolerance: " << tolerance << endl;
-		// cout << "servo2 Angle: " << servo2.ReadAngle() << ", servo2 closed angle: " << leftClosed << ", abs(difference): " << abs(servo2.ReadAngle() - leftClosed) << ", tolerance: " << tolerance << endl;
 		printf("GRIP ACTIVE\n");
 		printf("Motor %d, current: %d\n",servo1.GetID(), abs(servo1.ReadCurrent()));
 		printf("Motor %d, current: %d\n\n",servo2.GetID(), abs(servo2.ReadCurrent()));
 
 	}
 
-	// printf("\n\n GRIP COMPLETE\n\n");
 	servo1.grabSuccess = true;
 	servo2.grabSuccess = true;
 
-
-	// if(servo1.ReadAngle() >= (rightClosed + tolerance) || servo2.ReadAngle() <= (315 - tolerance))
-	// {
-	// 	printf("\n\n  GRIP FAILED\n\n");
-	// 	printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-	// 	printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
-
-	// 	servo1.grabSuccess = false;
-	// 	servo2.grabSuccess = false;
-
-	// 	printf("%d\n", servo1.grabSuccess);
-
-	// }
-
-	// else
-	// {
-	// 	printf("\n\n  GRIP COMPLETE\n\n");
-	// 	printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-	// 	printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
-
-	// 	servo1.grabSuccess = true;
-	// 	servo2.grabSuccess = true;
-
-	// 	printf("%d\n", servo1.grabSuccess);
-	// }
-
 }
 
-// int main()
-// {
 
-// 	// int curLimit = 90;
-// 	// int goalCur = 200;
-
-// 	// //Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
-// 	// MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
-// 	// MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
-	
-// 	// //Accessing the motors function
-// 	// servo1.PrintOperatingMode();
-// 	// servo2.PrintOperatingMode();
-
-// 	// servo1.SetProfile(32000, 400); // have to be in velocity mode I think
-// 	// servo2.SetProfile(32000, 400); // have to be in velocity mode I think
-
-
-// 	// while (1)
-// 	// {
-// 	// 	// printf("Motor %d, current position: %f\n",servo1.GetID(), servo1.ReadAngle());
-// 	// 	// printf("Motor %d, current position: %f\n\n",servo2.GetID(), servo2.ReadAngle());
-		
-// 	// 	// usleep(250000);
-
-// 	// 	// drop(servo1, servo2);
-
-// 	// 	drop(servo1, servo2);
-
-// 	// 	usleep(500000);
-
-// 	// 	grip(servo1, servo2);
-
-// 	// 	usleep(500000);
-// 	// }
-
-// 	// servo1.TorqueOFF();
-// 	// servo2.TorqueOFF();
-	
-	
-// 	//Adding others motor
-	
-// 	return(0);
 // }

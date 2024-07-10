@@ -1,8 +1,0 @@
-<launch>
-	<node name="test_y" pkg="eve_main" type="test_y" output="screen">
-	</node>
-
-	<node name="motor_node" pkg="eve_main" type="motor_node" output="screen">
-	</node>
-
-</launch>
