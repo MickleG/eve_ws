@@ -1,3 +1,8 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6f612717253b4d75f6e06089e97f4c36e7b7f5a93f7c878f0411cbc0170d552f
-size 181
+<launch>
+	<node name="test_y" pkg="eve_main" type="test_y" output="screen">
+	</node>
+
+	<node name="motor_node" pkg="eve_main" type="motor_node" output="screen">
+	</node>
+
+</launch>

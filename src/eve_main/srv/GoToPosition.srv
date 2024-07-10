@@ -1,3 +1,4 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ae5074c63e269429e805021350d2bd99565bb99aa822f9858450b8371e06c524
-size 67
+float32 desiredXPosition
+float32 desiredZPosition
+float32 speed
+---
