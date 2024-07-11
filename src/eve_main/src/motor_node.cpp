@@ -21,9 +21,12 @@ bool initialCenteringDone = false;
 bool liftingY = false;
 bool calibrationDone = false;
 bool columnDone = false;
+bool haltServoing = false;
 
-int hardwareBuffer = 45; // distance in mm from realsense camera to end of scissor sheath
-int zDeadbandBuffer = 30; // target distance in mm away from vine with respect to realsense camera
+int hardwareBuffer = 57; // distance in mm from realsense camera to end of scissor sheath
+int minZ = 30; // distance from realsense camera to start of camera sheath
+int desiredZDistance = -5;
+int zDeadbandBuffer = 5; // target distance in mm away from vine with respect to realsense camera
 int xDeadbandBuffer = 15; // target distance away from center of frame in pixels for x visual servoing
 
 int xServoingSpeed = -1;
@@ -88,6 +91,10 @@ void updateHarvestZoneDetected(const std_msgs::Bool::ConstPtr& msg) {
 	harvestZoneDetected = msg -> data;
 }
 
+void updateHaltServoing(const std_msgs::Bool::ConstPtr& msg) {
+	haltServoing = msg -> data;
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "motor_run_node");
 	ros::NodeHandle nh;
@@ -100,6 +107,7 @@ int main(int argc, char **argv) {
 	ros::Subscriber xOffsetSub = nh.subscribe("x_offset", 10, updateXOffset);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
 	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
+	ros::Subscriber haltServoingSub = nh.subscribe("halt_servoing", 10, updateHaltServoing);
 
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
@@ -126,8 +134,8 @@ int main(int argc, char **argv) {
 
 	// cout << "Ready to Harvest" << endl;
 
-	mechanism.yMotor.setSpeed(90);
-	mechanism.yMotor.setAcceleration(10);
+	mechanism.yMotor.setSpeed(100);
+	mechanism.yMotor.setAcceleration(50);
 
 	// calibrationDone = true;
 
@@ -149,14 +157,28 @@ int main(int argc, char **argv) {
 				mechanism.updateCurrentPosition();
 			}
 
-			if(findingZ && !blueDetected) {
+			if(findingZ && !blueDetected && !haltServoing) {
 				zOffset = goalZ - hardwareBuffer;
-				if(abs(zOffset) < zDeadbandBuffer) {
+
+				if((abs(zOffset - desiredZDistance)) < zDeadbandBuffer) {
 					zServoingSpeed = 0;
 					findingZ = false;
 				} else {
-					zServoingSpeed = zOffset;
+					if(zOffset >= 130) {
+						zOffset = 130;
+					} else {
+						zServoingSpeed = zOffset - desiredZDistance;
+					}
+
+					// else if(goalZ < (minZ + 2*zDeadbandBuffer)) {
+					// 	zServoingSpeed = -50;
+					// } 
+					
+
+					
 				}
+
+				// std::cout << "z_speed: " << zServoingSpeed << std::endl;
 
 				mechanism.moveInZ(zServoingSpeed);
 				mechanism.updateCurrentPosition();

@@ -18,6 +18,7 @@ bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
 bool blueDetected = false;
 bool liftingY = false;
+bool columnDone = false;
 
 int v_avg = 0;
 int goalZ = -1;
@@ -45,13 +46,16 @@ void updateLiftingY(const std_msgs::Bool::ConstPtr& msg) {
 	liftingY = msg -> data;
 }
 
+void updateColumnDone(const std_msgs::Bool::ConstPtr& msg) {
+	columnDone = msg -> data;
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "image_processing_node");
 	ros::NodeHandle nh;
 
 	ros::Publisher blueDetectedPub = nh.advertise<std_msgs::Bool>("blue_detected", 10);
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
-	// ros::Publisher vAvgPub = nh.advertise<std_msgs::Int32>("v_avg", 10);
 	ros::Publisher goalZPub = nh.advertise<std_msgs::Int32>("goal_z", 10);
 	ros::Publisher xOffsetPub = nh.advertise<std_msgs::Int32>("x_offset", 10);
 
@@ -60,6 +64,8 @@ int main(int argc, char **argv) {
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
+	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
+
 
 	ros::Rate rate(15);
 
@@ -87,7 +93,7 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	
 	
-	while(ros::ok()) {
+	while(ros::ok() && !columnDone) {
 		std_msgs::Bool blueDetectedMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Int32 goalZMsg;
@@ -240,16 +246,15 @@ int main(int argc, char **argv) {
 
 				// bool hue_condition = 0 <= hsv_pixel[0] && 180 >= hsv_pixel[0] && (30 > hsv_pixel[0] || 90 < hsv_pixel[0]);
 				bool hue_condition = !(40 <= hsv_pixel[0] && 80 >= hsv_pixel[0]);
-				bool sat_condition = 0 <= hsv_pixel[1] && 80 >= hsv_pixel[1];
-				bool val_condition = 0 <= hsv_pixel[2] && 255 >= hsv_pixel[2];
+				bool sat_condition = 0 <= hsv_pixel[1] && 150 >= hsv_pixel[1];
 
-				if (val < 0.2 && hue_condition && sat_condition && val_condition && val != 0 && croppingMask.at<unsigned char>(v, u) == 255) { // hue_condition &&
+				if (val < 0.25 && hue_condition && sat_condition && val != 0 && croppingMask.at<unsigned char>(v, u) == 255) { // hue_condition &&
 					vineMask.at<unsigned char>(v, u) = 255;
 				}
 			}
 		}
 
-		// cv::imshow("vinemask premorph", vineMask);
+		cv::imshow("vinemask premorph", vineMask);
 
 		// // Removing cups from vineMask to improve vine masking (as the gray color on the vines is a blue-based hue)
 		cv::subtract(vineMask, cupMask, vineMask);

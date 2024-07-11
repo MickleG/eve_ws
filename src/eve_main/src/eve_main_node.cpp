@@ -20,6 +20,7 @@ bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
 bool liftingY = false;
 bool columnDone = false;
+bool haltServoing = false;
 
 bool dryRunMode = false;
 
@@ -65,6 +66,7 @@ int main(int argc, char **argv) {
 	ros::Publisher harvestingPub = nh.advertise<std_msgs::Bool>("harvesting", 10);
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
 	ros::Publisher columnDonePub = nh.advertise<std_msgs::Bool>("column_done", 10);
+	ros::Publisher haltServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
@@ -86,11 +88,11 @@ int main(int argc, char **argv) {
     MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
     MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
 
-    servo1.PrintOperatingMode();
-    servo2.PrintOperatingMode();
+    // servo1.PrintOperatingMode();
+    // servo2.PrintOperatingMode();
 
-    servo1.SetProfile(32000, 400); // have to be in velocity mode I think
-    servo2.SetProfile(32000, 400);
+    servo1.SetProfile(500, 400); // velocity=32000
+    servo2.SetProfile(500, 400);
 
 	cutter.resetCut();
 	drop(servo1, servo2);
@@ -103,6 +105,7 @@ int main(int argc, char **argv) {
 		std_msgs::Bool harvestingMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Bool columnDoneMsg;
+		std_msgs::Bool haltServoingMsg;
 
 		if(initialCenteringDone && !harvestZoneDetected) {
 			liftingY = true;
@@ -124,99 +127,112 @@ int main(int argc, char **argv) {
 
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
-			break;
 
-			// for(int i = 0; i < 1100; i++) {
-			// 	liftingY = true;
-			// 	liftingYMsg.data = liftingY;
-			// 	liftingYPub.publish(liftingYMsg);
+			while(abs(eeYPosition - currentY) <= 37) {
+				liftingY = true;
+				liftingYMsg.data = true;
+				liftingYPub.publish(liftingYMsg);
 
-			// 	ros::spinOnce();
-			// 	rate.sleep();
-			// }
+				ros::spinOnce();
+				rate.sleep();
+			}
+
 			
-			// liftingY = false;
-			// liftingYMsg.data = liftingY;
-			// liftingYPub.publish(liftingYMsg);
+			liftingY = false;
+			liftingYMsg.data = liftingY;
+			liftingYPub.publish(liftingYMsg);
 
-			// ros::spinOnce();
-			// rate.sleep();
+			ros::spinOnce();
+			rate.sleep();
 
-			// std::cout << "y movement done, at top of cup" << std::endl;
-			// std::cout << "gripping and cutting" << std::endl;
+			std::cout << "y movement done, at top of cup" << std::endl;
+			std::cout << "gripping and cutting" << std::endl;
 
-			// if(!dryRunMode) {
-			// 	grip(servo1, servo2);
-			// 	usleep(250000);
-			// 	cutter.cutPlant();
-			// 	usleep(250000);
-			// }
+			if(!dryRunMode) {
+				grip(servo1, servo2);
+				usleep(50000);
+				cutter.cutPlant();
+			}
 
-			// // Getting current position of end effector
-			// getPositionClient.call(getPositionService);
+			// Getting current position of end effector
+			getPositionClient.call(getPositionService);
 
-			// float currentX = getPositionService.response.xPosition;
-			// currentY = getPositionService.response.yPosition;
-			// float currentZ = getPositionService.response.zPosition;
+			float currentX = getPositionService.response.xPosition;
+			currentY = getPositionService.response.yPosition;
+			float currentZ = getPositionService.response.zPosition;
 
 
-			// // Returning to home
-			// goToPositionService.request.desiredXPosition = dropZoneX;
-			// goToPositionService.request.desiredZPosition = dropZoneZ;
-			// goToPositionService.request.speed = goToPositionSpeed;
+			// Returning to home
+			goToPositionService.request.desiredXPosition = dropZoneX;
+			goToPositionService.request.desiredZPosition = dropZoneZ;
+			goToPositionService.request.speed = goToPositionSpeed;
 
-			// goToPositionClient.call(goToPositionService);
+			goToPositionClient.call(goToPositionService);
 
-			// std::cout << "dropping" << std::endl;
-			// drop(servo1, servo2);
-			// usleep(250000);
+			std::cout << "dropping" << std::endl;
+			drop(servo1, servo2);
+			usleep(500000);
 
-			// std::cout << "returning to harvest zone" << std::endl;
+			std::cout << "returning to harvest zone" << std::endl;
 
-			// // Returning to plant vine
-			// goToPositionService.request.desiredXPosition = currentX;
-			// goToPositionService.request.desiredZPosition = currentZ;
-			// goToPositionService.request.speed = goToPositionSpeed;
+			// Returning to plant vine
+			goToPositionService.request.desiredXPosition = currentX;
+			goToPositionService.request.desiredZPosition = currentZ;
+			goToPositionService.request.speed = goToPositionSpeed;
 
-			// goToPositionClient.call(goToPositionService);
+			goToPositionClient.call(goToPositionService);
 
-			// harvestCount++;
+			harvestCount++;
 
-			// harvesting = false;
-			// harvestingMsg.data = harvesting;
-			// harvestingPub.publish(harvestingMsg);
-			// ros::spinOnce();
+			harvesting = false;
+			harvestingMsg.data = harvesting;
+			harvestingPub.publish(harvestingMsg);
+			ros::spinOnce();
 
-			// if(harvestCount == totalPlantsPerVine) {
-			// 	columnDone = true;
-			// 	break;
-			// }
+			if(harvestCount == totalPlantsPerVine) {
+				columnDone = true;
+				break;
+			}
+
+			currentY = getPositionService.response.yPosition;
+
+			std::cout << "lifting to next servo zone" << std::endl;
 			
-			// while(abs(eeYPosition - currentY) <= 1900) {
-			// 	liftingY = true;
-			// 	liftingYMsg.data = true;
-			// 	liftingYPub.publish(liftingYMsg);
+			while(abs(eeYPosition - currentY) <= 150) {
+				liftingY = true;
+				liftingYMsg.data = true;
+				liftingYPub.publish(liftingYMsg);
 
-			// 	ros::spinOnce();
-			// 	rate.sleep();
-			// }
+				haltServoing = true;
+				haltServoingMsg.data = true;
+				haltServoingPub.publish(haltServoingMsg);
 
-			// liftingY = false;
-			// harvestZoneDetected = false;
-			// harvesting = false;
-			
-			
+				ros::spinOnce();
+				rate.sleep();
+			}
+
+			std::cout << "starting to servo again" << std::endl;
+
+			liftingY = false;
+			harvestZoneDetected = false;
+			harvesting = false;
+			haltServoing = false;
+		
 		}
+
+		
 
 		liftingYMsg.data = liftingY;
 		harvestingMsg.data = harvesting;
 		harvestZoneDetectedMsg.data = harvestZoneDetected;
 		columnDoneMsg.data = columnDone;
+		haltServoingMsg.data = haltServoing;
 
 		liftingYPub.publish(liftingYMsg);
 		harvestingPub.publish(harvestingMsg);
 		harvestZoneDetectedPub.publish(harvestZoneDetectedMsg);
 		columnDonePub.publish(columnDoneMsg);
+		haltServoingPub.publish(haltServoingMsg);
 
 		ros::spinOnce();
 		rate.sleep();

@@ -26,7 +26,7 @@ uint8_t MotorXM430::PrintDrivingMode()
 {
 	uint8_t type;
 	dxl_comm_result = packetHandler->read1ByteTxRx(portHandler, m_ID, ADDR_PRO_DRIVE_MODE, &type);
-	printf("Motor %d is on driving mode: %d\n", m_ID, type);
+	// printf("Motor %d is on driving mode: %d\n", m_ID, type);
 	return(type);
 }
 
@@ -356,10 +356,10 @@ MotorXM430::MotorXM430(int ID, int operating_mode, int current_limit, int goal_c
 	m_goal_current = goal_current;
 	SetGoalCurrent(goal_current);
 	m_present_position=ReadAngle();
-	printf("UPDATE: drivingmode setting: TIME_BASED MODE\n");
+	// printf("UPDATE: drivingmode setting: TIME_BASED MODE\n");
 	SetDrivingMode(TIME_BASED);
 	m_drivingmode = PrintDrivingMode();
-	printf("Motor %d initialized\n", m_ID);
+	// printf("Motor %d initialized\n", m_ID);
 
 	minAngle = minAng;
 	minAngle = maxAng;

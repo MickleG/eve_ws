@@ -814,24 +814,6 @@ MotorConfig.h
 stdint.h
 -
 
-/root/eve_ws/src/eve_main/src/EndEffectorConfig.cpp
-eve_main/EndEffectorConfig.h
-/root/eve_ws/src/eve_main/src/eve_main/EndEffectorConfig.h
-stdint.h
--
-stdio.h
--
-stdlib.h
--
-iostream
--
-time.h
--
-cmath
--
-eve_main/MotorConfig.h
-/root/eve_ws/src/eve_main/src/eve_main/MotorConfig.h
-
 /root/eve_ws/src/eve_main/src/motor_node.cpp
 ros/ros.h
 /root/eve_ws/src/eve_main/src/ros/ros.h
