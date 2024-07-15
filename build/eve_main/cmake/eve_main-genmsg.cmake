@@ -1,6 +1,6 @@
 # generated from genmsg/cmake/pkg-genmsg.cmake.em
 
-message(STATUS "eve_main: 1 messages, 2 services")
+message(STATUS "eve_main: 1 messages, 3 services")
 
 set(MSG_I_FLAGS "-Ieve_main:/root/eve_ws/src/eve_main/msg;-Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg")
 
@@ -32,6 +32,11 @@ add_custom_target(_eve_main_generate_messages_check_deps_${_filename}
   COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "eve_main" "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" ""
 )
 
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
+add_custom_target(_eve_main_generate_messages_check_deps_${_filename}
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "eve_main" "/root/eve_ws/src/eve_main/srv/HomeY.srv" ""
+)
+
 #
 #  langs = gencpp;geneus;genlisp;gennodejs;genpy
 #
@@ -58,6 +63,12 @@ _generate_srv_cpp(eve_main
   ""
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/eve_main
 )
+_generate_srv_cpp(eve_main
+  "/root/eve_ws/src/eve_main/srv/HomeY.srv"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/eve_main
+)
 
 ### Generating Module File
 _generate_module_cpp(eve_main
@@ -76,6 +87,8 @@ add_dependencies(eve_main_generate_messages_cpp _eve_main_generate_messages_chec
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GetPosition.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_cpp _eve_main_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" NAME_WE)
+add_dependencies(eve_main_generate_messages_cpp _eve_main_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_cpp _eve_main_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
@@ -107,6 +120,12 @@ _generate_srv_eus(eve_main
   ""
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/eve_main
 )
+_generate_srv_eus(eve_main
+  "/root/eve_ws/src/eve_main/srv/HomeY.srv"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/eve_main
+)
 
 ### Generating Module File
 _generate_module_eus(eve_main
@@ -125,6 +144,8 @@ add_dependencies(eve_main_generate_messages_eus _eve_main_generate_messages_chec
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GetPosition.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_eus _eve_main_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" NAME_WE)
+add_dependencies(eve_main_generate_messages_eus _eve_main_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_eus _eve_main_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
@@ -156,6 +177,12 @@ _generate_srv_lisp(eve_main
   ""
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/eve_main
 )
+_generate_srv_lisp(eve_main
+  "/root/eve_ws/src/eve_main/srv/HomeY.srv"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/eve_main
+)
 
 ### Generating Module File
 _generate_module_lisp(eve_main
@@ -174,6 +201,8 @@ add_dependencies(eve_main_generate_messages_lisp _eve_main_generate_messages_che
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GetPosition.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_lisp _eve_main_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" NAME_WE)
+add_dependencies(eve_main_generate_messages_lisp _eve_main_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_lisp _eve_main_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
@@ -205,6 +234,12 @@ _generate_srv_nodejs(eve_main
   ""
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/eve_main
 )
+_generate_srv_nodejs(eve_main
+  "/root/eve_ws/src/eve_main/srv/HomeY.srv"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/eve_main
+)
 
 ### Generating Module File
 _generate_module_nodejs(eve_main
@@ -223,6 +258,8 @@ add_dependencies(eve_main_generate_messages_nodejs _eve_main_generate_messages_c
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GetPosition.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_nodejs _eve_main_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" NAME_WE)
+add_dependencies(eve_main_generate_messages_nodejs _eve_main_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_nodejs _eve_main_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
@@ -254,6 +291,12 @@ _generate_srv_py(eve_main
   ""
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/eve_main
 )
+_generate_srv_py(eve_main
+  "/root/eve_ws/src/eve_main/srv/HomeY.srv"
+  "${MSG_I_FLAGS}"
+  ""
+  ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/eve_main
+)
 
 ### Generating Module File
 _generate_module_py(eve_main
@@ -272,6 +315,8 @@ add_dependencies(eve_main_generate_messages_py _eve_main_generate_messages_check
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GetPosition.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_py _eve_main_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/GoToPosition.srv" NAME_WE)
+add_dependencies(eve_main_generate_messages_py _eve_main_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/root/eve_ws/src/eve_main/srv/HomeY.srv" NAME_WE)
 add_dependencies(eve_main_generate_messages_py _eve_main_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility

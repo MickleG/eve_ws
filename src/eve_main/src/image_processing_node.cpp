@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	
 	
-	while(ros::ok() && !columnDone) {
+	while(ros::ok()) {
 		std_msgs::Bool blueDetectedMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Int32 goalZMsg;
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		cv::imshow("cup", cupMask);
+		// cv::imshow("cup", cupMask);
 
 
 		std::sort(cupPoints.begin(), cupPoints.end(), [](const int& a, const int& b) {
@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
 
 		v_avg = int(v_avg_storage / float(v_counter));
 
-		if(v_avg >= 200 && !harvesting) {
+		if(v_avg >= 200 && !harvesting && initialCenteringDone) {
 			harvestZoneDetected = true;
 		} else {
 			harvestZoneDetected = false;
@@ -334,7 +334,7 @@ int main(int argc, char **argv) {
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		// cv::imshow("vine_rib_filtered", smallest_values_filtered);
+		cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;

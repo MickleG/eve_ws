@@ -52,8 +52,7 @@ int main(int argc, char **argv) {
 
 		std::cout << "Y BEFORE MOVE: " << currentY << std::endl;
 			
-		while(abs(eeYPosition - currentY) <= 100) {
-			// std::cout << "yDiff: " << abs(eeYPosition - currentY) << std::endl;
+		while(abs(eeYPosition - currentY) <= 1000) {
 			liftingY = true;
 			liftingYMsg.data = liftingY;
 			liftingYPub.publish(liftingYMsg);

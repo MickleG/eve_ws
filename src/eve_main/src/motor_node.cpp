@@ -12,6 +12,7 @@
 #include "eve_main/EndEffectorPosition.h"
 #include "eve_main/GetPosition.h"
 #include "eve_main/GoToPosition.h"
+#include "eve_main/HomeY.h"
 
 bool harvesting = false;
 bool findingZ = false;
@@ -63,6 +64,20 @@ bool goToPosition(eve_main::GoToPosition::Request &req, eve_main::GoToPosition::
 	return true;
 }
 
+bool homeY(eve_main::HomeY::Request &req, eve_main::HomeY::Response &res) {
+	printf("%d\n", mechanism.yMotor.driveState);
+	while(mechanism.yMotor.driveState == 1) {
+        mechanism.yMotor.setSpeed(-1 * req.speed); // speed limiting y stage due to lower speed cap than left and right motors
+        mechanism.yMotor.controlLoopY();
+    }
+
+    printf("done homing\n");
+
+    mechanism.yMotor.setStepPosition(0);
+    
+    return true;
+}
+
 void updateHarvesting(const std_msgs::Bool::ConstPtr& msg) {
 	harvesting = msg -> data;
 }
@@ -99,23 +114,21 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "motor_run_node");
 	ros::NodeHandle nh;
 
+	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
+	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
+	
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber goalZSub = nh.subscribe("goal_z", 10, updateGoalZ);
 	ros::Subscriber blueDetectedSub = nh.subscribe("blue_detected", 10, updateBlueDetected);
 	ros::Subscriber harvestZoneDetectedSub = nh.subscribe("harvest_zone_detected", 10, updateHarvestZoneDetected);
-	
 	ros::Subscriber xOffsetSub = nh.subscribe("x_offset", 10, updateXOffset);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
 	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
 	ros::Subscriber haltServoingSub = nh.subscribe("halt_servoing", 10, updateHaltServoing);
 
-	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
-	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
-	// ros::Publisher calibrationDonePub = nh.advertise<std_msgs::Bool>("calibration_done", 10);
-	
 	ros::ServiceServer getPositionService = nh.advertiseService("get_position", getPosition);
 	ros::ServiceServer goToPositionService = nh.advertiseService("go_to_position", goToPosition);
-
+	ros::ServiceServer homeYService = nh.advertiseService("home_y", homeY);
 
 	ros::Rate rate(100000);
 
@@ -139,7 +152,7 @@ int main(int argc, char **argv) {
 
 	// calibrationDone = true;
 
-	while(ros::ok() && !columnDone) {
+	while(ros::ok()) {
 		eve_main::EndEffectorPosition endEffectorPositionMsg;
 		std_msgs::Bool initialCenteringDoneMsg;
 		std_msgs::Bool calibrationDoneMsg;
@@ -169,12 +182,6 @@ int main(int argc, char **argv) {
 					} else {
 						zServoingSpeed = zOffset - desiredZDistance;
 					}
-
-					// else if(goalZ < (minZ + 2*zDeadbandBuffer)) {
-					// 	zServoingSpeed = -50;
-					// } 
-					
-
 					
 				}
 
@@ -192,9 +199,10 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if(liftingY) {
+		if(liftingY && !columnDone) {
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
+			mechanism.yMotor.controlLoopY();
 		}
 
 		if(centeredCounter == 0) {
@@ -211,6 +219,7 @@ int main(int argc, char **argv) {
 		endEffectorPositionPub.publish(endEffectorPositionMsg);
 		initialCenteringDonePub.publish(initialCenteringDoneMsg);
 		// calibrationDonePub.publish(calibrationDoneMsg);
+		
 
 		ros::spinOnce();
 		rate.sleep();

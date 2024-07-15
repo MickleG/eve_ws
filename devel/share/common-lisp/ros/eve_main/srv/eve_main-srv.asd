@@ -8,4 +8,6 @@
     (:file "_package_GetPosition" :depends-on ("_package"))
     (:file "GoToPosition" :depends-on ("_package_GoToPosition"))
     (:file "_package_GoToPosition" :depends-on ("_package"))
+    (:file "HomeY" :depends-on ("_package_HomeY"))
+    (:file "_package_HomeY" :depends-on ("_package"))
   ))

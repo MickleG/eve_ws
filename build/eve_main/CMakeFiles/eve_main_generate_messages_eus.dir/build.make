@@ -56,6 +56,7 @@ include eve_main/CMakeFiles/eve_main_generate_messages_eus.dir/progress.make
 eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/msg/EndEffectorPosition.l
 eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/GetPosition.l
 eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/GoToPosition.l
+eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/HomeY.l
 eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/manifest.l
 
 
@@ -74,14 +75,20 @@ eve_main/CMakeFiles/eve_main_generate_messages_eus: /root/eve_ws/devel/share/ros
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/eve_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Generating EusLisp code from eve_main/GoToPosition.srv"
 	cd /root/eve_ws/build/eve_main && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/geneus/cmake/../../../lib/geneus/gen_eus.py /root/eve_ws/src/eve_main/srv/GoToPosition.srv -Ieve_main:/root/eve_ws/src/eve_main/msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p eve_main -o /root/eve_ws/devel/share/roseus/ros/eve_main/srv
 
+/root/eve_ws/devel/share/roseus/ros/eve_main/srv/HomeY.l: /opt/ros/noetic/lib/geneus/gen_eus.py
+/root/eve_ws/devel/share/roseus/ros/eve_main/srv/HomeY.l: /root/eve_ws/src/eve_main/srv/HomeY.srv
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/eve_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating EusLisp code from eve_main/HomeY.srv"
+	cd /root/eve_ws/build/eve_main && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/geneus/cmake/../../../lib/geneus/gen_eus.py /root/eve_ws/src/eve_main/srv/HomeY.srv -Ieve_main:/root/eve_ws/src/eve_main/msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p eve_main -o /root/eve_ws/devel/share/roseus/ros/eve_main/srv
+
 /root/eve_ws/devel/share/roseus/ros/eve_main/manifest.l: /opt/ros/noetic/lib/geneus/gen_eus.py
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/eve_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating EusLisp manifest code for eve_main"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/root/eve_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Generating EusLisp manifest code for eve_main"
 	cd /root/eve_ws/build/eve_main && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/geneus/cmake/../../../lib/geneus/gen_eus.py -m -o /root/eve_ws/devel/share/roseus/ros/eve_main eve_main std_msgs
 
 eve_main_generate_messages_eus: eve_main/CMakeFiles/eve_main_generate_messages_eus
 eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/msg/EndEffectorPosition.l
 eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/GetPosition.l
 eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/GoToPosition.l
+eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/srv/HomeY.l
 eve_main_generate_messages_eus: /root/eve_ws/devel/share/roseus/ros/eve_main/manifest.l
 eve_main_generate_messages_eus: eve_main/CMakeFiles/eve_main_generate_messages_eus.dir/build.make
 

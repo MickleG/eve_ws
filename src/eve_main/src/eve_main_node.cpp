@@ -10,10 +10,12 @@
 #include "eve_main/EndEffectorPosition.h"
 #include "eve_main/GetPosition.h"
 #include "eve_main/GoToPosition.h"
+#include "eve_main/HomeY.h"
 #include "eve_main/Cutter.h"
 #include "eve_main/Grip.h"
 
 const int totalPlantsPerVine = 3;
+const int totalColumns = 3;
 
 bool harvesting = false;
 bool initialCenteringDone = false;
@@ -30,10 +32,14 @@ float eeZPosition = 0;
 
 float dropZoneX = 0;
 float dropZoneZ = 150;
+float bottomY = 0;
+
 float goToPositionSpeed = 150;
+float homingYSpeed = 50;
 
 
 int harvestCount = 0;
+int columnCount = 0;
 int curLimit = 30;
 int goalCur = 200;
 
@@ -67,6 +73,7 @@ int main(int argc, char **argv) {
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
 	ros::Publisher columnDonePub = nh.advertise<std_msgs::Bool>("column_done", 10);
 	ros::Publisher haltServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
+	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
@@ -75,9 +82,11 @@ int main(int argc, char **argv) {
 	// Establishing ROS Client for Service calls
 	ros::ServiceClient getPositionClient = nh.serviceClient<eve_main::GetPosition>("get_position");
 	ros::ServiceClient goToPositionClient = nh.serviceClient<eve_main::GoToPosition>("go_to_position");
-	
+	ros::ServiceClient homeYClient = nh.serviceClient<eve_main::HomeY>("home_y");
+
 	eve_main::GetPosition getPositionService;
 	eve_main::GoToPosition goToPositionService;
+	eve_main::HomeY homeYService;
 
 	ros::Rate rate(1000);
 
@@ -100,18 +109,19 @@ int main(int argc, char **argv) {
 	usleep(100000); // add delay to prevent motor jerk
 	
 
-	while(ros::ok() && !columnDone){
+	while(ros::ok() && columnCount < totalColumns){
 		std_msgs::Bool liftingYMsg;
 		std_msgs::Bool harvestingMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Bool columnDoneMsg;
 		std_msgs::Bool haltServoingMsg;
+		std_msgs::Bool initialCenteringDoneMsg;
 
-		if(initialCenteringDone && !harvestZoneDetected) {
+		if(initialCenteringDone && !harvestZoneDetected && !columnDone) {
 			liftingY = true;
 			liftingYMsg.data = true;
 			liftingYPub.publish(liftingYMsg);
-		} else if(harvestZoneDetected) {
+		} else if(harvestZoneDetected && !columnDone) {
 
 			getPositionClient.call(getPositionService);
 
@@ -173,51 +183,71 @@ int main(int argc, char **argv) {
 			drop(servo1, servo2);
 			usleep(500000);
 
-			std::cout << "returning to harvest zone" << std::endl;
-
-			// Returning to plant vine
-			goToPositionService.request.desiredXPosition = currentX;
-			goToPositionService.request.desiredZPosition = currentZ;
-			goToPositionService.request.speed = goToPositionSpeed;
-
-			goToPositionClient.call(goToPositionService);
-
 			harvestCount++;
 
-			harvesting = false;
-			harvestingMsg.data = harvesting;
-			harvestingPub.publish(harvestingMsg);
-			ros::spinOnce();
 
+			
 			if(harvestCount == totalPlantsPerVine) {
 				columnDone = true;
-				break;
-			}
+				columnCount++;
+			} else {
+				std::cout << "returning to harvest zone" << std::endl;
 
-			currentY = getPositionService.response.yPosition;
+				// Returning to plant vine
+				goToPositionService.request.desiredXPosition = currentX;
+				goToPositionService.request.desiredZPosition = currentZ;
+				goToPositionService.request.speed = goToPositionSpeed;
 
-			std::cout << "lifting to next servo zone" << std::endl;
-			
-			while(abs(eeYPosition - currentY) <= 150) {
-				liftingY = true;
-				liftingYMsg.data = true;
-				liftingYPub.publish(liftingYMsg);
+				goToPositionClient.call(goToPositionService);
 
-				haltServoing = true;
-				haltServoingMsg.data = true;
-				haltServoingPub.publish(haltServoingMsg);
-
+				
+				harvesting = false;
+				harvestingMsg.data = harvesting;
+				harvestingPub.publish(harvestingMsg);
 				ros::spinOnce();
-				rate.sleep();
-			}
 
-			std::cout << "starting to servo again" << std::endl;
+				currentY = getPositionService.response.yPosition;
+
+				std::cout << "lifting to next servo zone" << std::endl;
+				
+				while(abs(eeYPosition - currentY) <= 150) {
+					liftingY = true;
+					liftingYMsg.data = true;
+					liftingYPub.publish(liftingYMsg);
+
+					haltServoing = true;
+					haltServoingMsg.data = true;
+					haltServoingPub.publish(haltServoingMsg);
+
+					ros::spinOnce();
+					rate.sleep();
+				}
+
+				std::cout << "starting to servo again" << std::endl;
+			}
 
 			liftingY = false;
 			harvestZoneDetected = false;
 			harvesting = false;
 			haltServoing = false;
 		
+		}
+
+		if(columnDone) {
+
+			std::cout << "column done, going to new column" << std::endl;
+
+			homeYService.request.speed = homingYSpeed;
+			homeYClient.call(homeYService);
+
+			columnDone = false;
+			initialCenteringDone = false;
+
+			initialCenteringDoneMsg.data = false;
+			initialCenteringDonePub.publish(initialCenteringDoneMsg);
+
+			ros::spinOnce();
+			rate.sleep();
 		}
 
 		

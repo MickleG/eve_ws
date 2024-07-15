@@ -17,6 +17,7 @@ add_service_files(
 	FILES
 	GetPosition.srv
 	GoToPosition.srv
+	HomeY.srv
 )
 
 generate_messages(

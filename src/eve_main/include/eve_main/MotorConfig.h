@@ -2,6 +2,7 @@
 #define MOTORCONFIG_H
 
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
+#include <algorithm>
 
 class MotorConfig
 {
@@ -27,8 +28,9 @@ public:
     uint8_t stepPin; // needs to be pulsed between HIGH and LOW to achieve motion
     uint8_t dirPin;  // HIGH = Drives INWARD (towards stepper motor) || LOW = Drives OUTWARD (away from stepper motor)
 
-    uint8_t limitInside;  // needs to be pulsed between HIGH and LOW to achieve motion
-    uint8_t limitOutside; // HIGH = Drives INWARD (towards stepper motor) || LOW = Drives OUTWARD (away from stepper motor)
+    uint8_t limitInside;  // limit switches closest to motors
+    uint8_t limitOutside; // limit switches closest to buck converters
+    uint8_t limitBottom; // y stage limit switch
 
     // Current Motor Characteristics
     bool phase;      // phase of stepper motor (High 1 or Low 0) to power coils during actuation
@@ -53,11 +55,13 @@ public:
     MotorConfig(char Side);
 
     MotorConfig(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn);
+    MotorConfig(uint8_t s, uint8_t d, uint8_t limBottom);
 
     MotorConfig();
 
     // SET FUNCTIONS
     void setHardware(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn);
+    void setHardware(uint8_t s, uint8_t d, uint8_t limBottom);
 
     void setStepPosition(uint16_t steps);
 
@@ -80,6 +84,7 @@ public:
     void motorDriveY(); // TO BE USED IN CONTROL LOOP -- decides when its time to step the motor based on setSpeed, keeps track of position as well
     
     void controlLoop(); // TO BE USED IN ROS Motor Control NODE -- update at 1GHz->2GHz
+    void controlLoopY();
 
     // Goal and acceleration functions
     

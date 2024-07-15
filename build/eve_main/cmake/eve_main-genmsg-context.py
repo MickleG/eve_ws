@@ -1,7 +1,7 @@
 # generated from genmsg/cmake/pkg-genmsg.context.in
 
 messages_str = "/root/eve_ws/src/eve_main/msg/EndEffectorPosition.msg"
-services_str = "/root/eve_ws/src/eve_main/srv/GetPosition.srv;/root/eve_ws/src/eve_main/srv/GoToPosition.srv"
+services_str = "/root/eve_ws/src/eve_main/srv/GetPosition.srv;/root/eve_ws/src/eve_main/srv/GoToPosition.srv;/root/eve_ws/src/eve_main/srv/HomeY.srv"
 pkg_name = "eve_main"
 dependencies_str = "std_msgs"
 langs = "gencpp;geneus;genlisp;gennodejs;genpy"

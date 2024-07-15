@@ -45,6 +45,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/eve_main/srv" TYPE FILE FILES
     "/root/eve_ws/src/eve_main/srv/GetPosition.srv"
     "/root/eve_ws/src/eve_main/srv/GoToPosition.srv"
+    "/root/eve_ws/src/eve_main/srv/HomeY.srv"
     )
 endif()
 

@@ -5,9 +5,11 @@
 #include <stdio.h>      // For printf statements
 #include <stdlib.h>
 #include <iostream>
+#include <unistd.h>
 #include <time.h>       // For NANOS function
 #include <cmath>        // For sqrt and other math functions
 #include "eve_main/MotorConfig.h"// For MotorConfig class and functions
+#include <algorithm>
 
 using namespace std;
 
@@ -44,16 +46,16 @@ using namespace std;
 
         leftMotor.setHardware(17, 18, 5, 1);
         rightMotor.setHardware(4, 27, 2, 3);
-        yMotor.setHardware(25, 24, 21, 13); // defines the y stage motor, up is positive speed
+        yMotor.setHardware(25, 24, 6); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);
         rightMotor.setStepPosition(right);
         yMotor.setStepPosition(0);
         
-        leftMotorPosition = 0; // motor Position in mm
-        rightMotorPosition = 0; // motor Position in mm
-        yMotorPosition = 0;
+        leftMotorPosition = 0; // motor position in mm
+        rightMotorPosition = 0; // motor position in mm
+        yMotorPosition = 0; // motor position in mm
     
         rightMotorSpeed = 0; // *1.6 = mm/s
         leftMotorSpeed = 0; // *1.6 = mm/s
@@ -170,9 +172,12 @@ using namespace std;
     {
         rightMotor.setSpeed(0);
         leftMotor.setSpeed(0);
+        yMotor.setSpeed(0);
+
+        bool startYCalib = false;
  
         // ping outer right switch
-        while (leftMotor.driveState == 1 && rightMotor.driveState == 1) // monitor unitl limit switch is pressed
+        while (leftMotor.driveState == 1 && rightMotor.driveState == 1 && !startYCalib) // monitor until limit switch is pressed
         {
             rightMotor.setSpeed(speed*-1); // set right motor speed to drive right
             leftMotor.setSpeed(speed); // set left motor speed to drive right
@@ -198,9 +203,8 @@ using namespace std;
             if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
-                calibrationSuccess = 1;
-
                 goToPosition(0, 100, 100);
+                startYCalib = true;
             }
 
             else { calibrationSuccess = 0; }
@@ -223,12 +227,23 @@ using namespace std;
             if(rightMotor.driveState == 2)
             {
                 rightMotor.setStepPosition(0+256);
-                calibrationSuccess = 1;
-
                 goToPosition(0, 100, 100);
+                startYCalib = true;
             }
 
             else { calibrationSuccess = 0; }
+        }
+
+        if(startYCalib) {
+            while(yMotor.driveState == 1) {
+                yMotor.setSpeed(-speed); // speed limiting y stage due to lower speed cap than left and right motors
+                yMotor.controlLoopY();
+            }
+
+            yMotor.setStepPosition(0);
+            calibrationSuccess = 1;
+
+            
         }
 
         

@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "/root/eve_ws/devel/share/common-lisp/ros/eve_main/msg/EndEffectorPosition.lisp"
   "/root/eve_ws/devel/share/common-lisp/ros/eve_main/srv/GetPosition.lisp"
   "/root/eve_ws/devel/share/common-lisp/ros/eve_main/srv/GoToPosition.lisp"
+  "/root/eve_ws/devel/share/common-lisp/ros/eve_main/srv/HomeY.lisp"
   "CMakeFiles/eve_main_generate_messages_lisp"
 )
 

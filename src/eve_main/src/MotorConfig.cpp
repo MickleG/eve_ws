@@ -2,10 +2,12 @@
 #include "eve_main/MotorConfig.h"
 #include <stdint.h>     // For uint8_t, uint16_t, uint32_t, uint64_t
 #include <stdlib.h>
+#include <iostream>
 #include <stdio.h>      // For printf statements
 #include <wiringPi.h>   // Include WiringPi library
 #include <time.h>       // For NANOS function
 #include <cmath>        // For sqrt and other math functions
+#include <algorithm>
 
 using namespace std;
 
@@ -85,12 +87,44 @@ using namespace std;
 
         limitOutside = limOut;
         limitInside = limIn;
+
         
         pinMode(limitOutside, INPUT);      	
         pullUpDnControl(limitOutside, PUD_UP); 
 
         pinMode(limitInside, INPUT);      	   
         pullUpDnControl(limitInside, PUD_UP); 
+        
+        pinMode(stepPin, OUTPUT);
+        pinMode(dirPin, OUTPUT);
+
+        prevTimeStep = nanos(); // sets initial pulse time instance
+        limTimeStep = nanos(); // sets initial limit trigger time instance 
+        currentTimeStep = nanos();
+        accTime = nanos();
+        
+        phase = 0; // initialize stepper motor phase
+        switchPress = 0;
+        driveState = 1; // initialize driveState to normal (should be initialized to 1 after calibration) 
+        stepCount = 0; // intialize motor position
+        accSteps = 0;
+        acceleration = 0.1;
+
+        setSpeed(0);
+    }
+
+    MotorConfig::MotorConfig(uint8_t s, uint8_t d, uint8_t limBottom)
+    {
+        wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
+
+        stepPin = s; // set new hardware gpio pin for motor step pin
+        dirPin = d; // set new hardware gpio pin for motor direciton 
+
+        limitBottom = limBottom;
+
+        
+        pinMode(limitBottom, INPUT);       
+        pullUpDnControl(limitBottom, PUD_UP); 
         
         pinMode(stepPin, OUTPUT);
         pinMode(dirPin, OUTPUT);
@@ -147,6 +181,23 @@ using namespace std;
 
         pinMode(limitInside, INPUT);      
         pullUpDnControl(limitInside, PUD_UP);
+        
+        pinMode(stepPin, OUTPUT);
+        pinMode(dirPin, OUTPUT);
+    }
+
+    void MotorConfig::setHardware(uint8_t s, uint8_t d, uint8_t limBottom)
+    {
+        wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
+
+        stepPin = s; // set new hardware gpio pin for motor step pin
+        dirPin = d; // set new hardware gpio pin for motor direciton 
+
+        limitBottom = limBottom;
+        
+        pinMode(limitBottom, INPUT);       
+        pullUpDnControl(limitBottom, PUD_UP);
+
         
         pinMode(stepPin, OUTPUT);
         pinMode(dirPin, OUTPUT);
@@ -298,7 +349,7 @@ using namespace std;
         {
             digitalWrite(stepPin, phase); // motor coils HIGH or LOW (1 or 0)
             prevTimeStep = nanos(); // log the time stamp for step
-            stepCount += (-motorDir*phase); // only add stepCount when coils on (phase = 1)
+            stepCount += (-motorDir*phase); // only add stepCount when coils on (phase = 1). Negative due to motor direction positive driving y stage downwards
             phase = !phase; // switch phase b/t 0 and 1 
         }
 
@@ -309,10 +360,9 @@ using namespace std;
     void MotorConfig::controlLoop()
     {
         currentTimeStep = nanos(); // test if this works better, as this is also updated inside motorDrive
-        
+
         bool outerSwitch = digitalRead(limitOutside);
         bool innerSwitch = digitalRead(limitInside);
-
 
         switch (driveState)
         {
@@ -397,6 +447,63 @@ using namespace std;
 
                 else{currentSpeed = 0;} // stop -- this would be if both limit switches were held down
 
+                break;
+
+        }
+    }
+
+    void MotorConfig::controlLoopY()
+    {
+        currentTimeStep = nanos(); // test if this works better, as this is also updated inside motorDrive
+
+        bool bottomSwitch = digitalRead(limitBottom);
+
+        switch (driveState)
+        {
+            case 1:
+
+                motorDrive(); // run the motor at setspeed until switch is determed to be pressed in the line below
+
+                if(bottomSwitch)
+                {
+                    if(!switchPress)
+                    {
+                        limTimeStep = nanos();
+                        switchPress = 1;
+                    }
+
+                    else if (currentTimeStep - limTimeStep > debounceTime)
+                    {
+                        driveState = -1; // will determine which precise state we are in
+                    }
+                }
+
+                else
+                {
+                    switchPress = 0; // toggle switch pressed boolean to 0 as there is no limit switch pressed
+                }
+
+                break;
+
+
+            case -1: // if limitBottom is pressed
+
+                if (bottomSwitch) // if limitBottom remains pressed
+                {
+                    if (motorDir < 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    else {currentSpeed = 0;} // report 0 motor speed even though speed commanded might be positive
+
+                    limTimeStep = nanos();
+                }
+
+                else if ((currentTimeStep - limTimeStep) < debounceTime) // 1ms debounce time after switch is released, only allows travel in opposite direction to switch 
+                {
+                    if (motorDir < 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    else {currentSpeed = 0;}
+                }
+
+                else { driveState = 1; }
+                
                 break;
 
         }
