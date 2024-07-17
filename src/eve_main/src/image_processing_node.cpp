@@ -18,7 +18,8 @@ bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
 bool blueDetected = false;
 bool liftingY = false;
-bool columnDone = false;
+bool allColumnsDone = false;
+bool cameraRunning = false;
 
 int v_avg = 0;
 int goalZ = -1;
@@ -46,8 +47,8 @@ void updateLiftingY(const std_msgs::Bool::ConstPtr& msg) {
 	liftingY = msg -> data;
 }
 
-void updateColumnDone(const std_msgs::Bool::ConstPtr& msg) {
-	columnDone = msg -> data;
+void updateAllColumnsDone(const std_msgs::Bool::ConstPtr& msg) {
+	allColumnsDone = msg -> data;
 }
 
 int main(int argc, char **argv) {
@@ -58,18 +59,17 @@ int main(int argc, char **argv) {
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
 	ros::Publisher goalZPub = nh.advertise<std_msgs::Int32>("goal_z", 10);
 	ros::Publisher xOffsetPub = nh.advertise<std_msgs::Int32>("x_offset", 10);
-
+	ros::Publisher cameraRunningPub = nh.advertise<std_msgs::Bool>("camera_running", 10);
 
 
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
-	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
+	ros::Subscriber allColumnsDoneSub = nh.subscribe("all_columns_done", 10, updateAllColumnsDone);
 
 
 	ros::Rate rate(15);
 
-	// usleep(100000); // add delay to prevent motor jerk
 
 	int resolution[2] = {424, 240};
 	int cropped_gripper_bounds[2] = {130, 400};
@@ -93,14 +93,25 @@ int main(int argc, char **argv) {
 	int counter = 0;
 	
 	
-	while(ros::ok()) {
+	while(ros::ok() && !allColumnsDone) {
 		std_msgs::Bool blueDetectedMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Int32 goalZMsg;
 		std_msgs::Int32 xOffsetMsg;
+		std_msgs::Bool cameraRunningMsg;
 
 		rs2::frameset frames = pipe.wait_for_frames();
 		frames = align_to_color.process(frames);
+
+		if(frames) {
+			cameraRunning = true;
+		} else {
+			cameraRunning = false;
+		}
+
+		cameraRunningMsg.data = cameraRunning;
+		cameraRunningPub.publish(cameraRunningMsg);
+		ros::spinOnce();
 
 
 		// collecting color and depth frames from RealSense camera
@@ -220,7 +231,7 @@ int main(int argc, char **argv) {
 		cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
             
 
-		if(!harvesting && liftingY) {
+		if(!harvesting && liftingY && initialCenteringDone) {
 			if(totalCupPixels > blueThresholdPixels) {
 				blueDetected = true;
 				// cout << "blue detected" << endl;
@@ -228,6 +239,8 @@ int main(int argc, char **argv) {
 				blueDetected = false;
 				// cout << "blue NOT detected" << endl;
 			}
+		} else {
+			blueDetected = false;
 		}
 
 		// Creating vineMask and depthImage to use for visual servoing in x and z, respectively
@@ -254,7 +267,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		cv::imshow("vinemask premorph", vineMask);
+		// cv::imshow("vinemask premorph", vineMask);
 
 		// // Removing cups from vineMask to improve vine masking (as the gray color on the vines is a blue-based hue)
 		cv::subtract(vineMask, cupMask, vineMask);
@@ -334,7 +347,7 @@ int main(int argc, char **argv) {
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		cv::imshow("vine_rib_filtered", smallest_values_filtered);
+		// cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;
@@ -380,7 +393,7 @@ int main(int argc, char **argv) {
 		cv::Point centerX(avg_u, int(resolution[1] / 2));
 		cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-		cv::imshow("image", rgb_image);
+		// cv::imshow("image", rgb_image);
 
 
 		counter++;

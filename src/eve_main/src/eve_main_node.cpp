@@ -23,6 +23,7 @@ bool harvestZoneDetected = false;
 bool liftingY = false;
 bool columnDone = false;
 bool haltServoing = false;
+bool allColumnsDone = false;
 
 bool dryRunMode = false;
 
@@ -35,7 +36,7 @@ float dropZoneZ = 150;
 float bottomY = 0;
 
 float goToPositionSpeed = 150;
-float homingYSpeed = 50;
+float homingYSpeed = 100;
 
 
 int harvestCount = 0;
@@ -74,6 +75,7 @@ int main(int argc, char **argv) {
 	ros::Publisher columnDonePub = nh.advertise<std_msgs::Bool>("column_done", 10);
 	ros::Publisher haltServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
+	ros::Publisher allColumnsDonePub = nh.advertise<std_msgs::Bool>("all_columns_done", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
@@ -109,13 +111,14 @@ int main(int argc, char **argv) {
 	usleep(100000); // add delay to prevent motor jerk
 	
 
-	while(ros::ok() && columnCount < totalColumns){
+	while(ros::ok() && !allColumnsDone){
 		std_msgs::Bool liftingYMsg;
 		std_msgs::Bool harvestingMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Bool columnDoneMsg;
 		std_msgs::Bool haltServoingMsg;
 		std_msgs::Bool initialCenteringDoneMsg;
+		std_msgs::Bool allColumnsDoneMsg;
 
 		if(initialCenteringDone && !harvestZoneDetected && !columnDone) {
 			liftingY = true;
@@ -237,17 +240,29 @@ int main(int argc, char **argv) {
 
 			std::cout << "column done, going to new column" << std::endl;
 
-			homeYService.request.speed = homingYSpeed;
-			homeYClient.call(homeYService);
-
-			columnDone = false;
 			initialCenteringDone = false;
-
 			initialCenteringDoneMsg.data = false;
 			initialCenteringDonePub.publish(initialCenteringDoneMsg);
 
 			ros::spinOnce();
 			rate.sleep();
+
+			homeYService.request.speed = homingYSpeed;
+			homeYClient.call(homeYService);
+
+			columnDone = false;
+			
+
+			harvestCount = 0;
+
+			printf("homing done\n");
+
+		}
+
+		if(columnCount >= totalColumns) {
+			allColumnsDone = true;
+		} else {
+			allColumnsDone = false;
 		}
 
 		
@@ -257,12 +272,16 @@ int main(int argc, char **argv) {
 		harvestZoneDetectedMsg.data = harvestZoneDetected;
 		columnDoneMsg.data = columnDone;
 		haltServoingMsg.data = haltServoing;
+		allColumnsDoneMsg.data = allColumnsDone;
 
 		liftingYPub.publish(liftingYMsg);
 		harvestingPub.publish(harvestingMsg);
 		harvestZoneDetectedPub.publish(harvestZoneDetectedMsg);
 		columnDonePub.publish(columnDoneMsg);
 		haltServoingPub.publish(haltServoingMsg);
+		allColumnsDonePub.publish(allColumnsDoneMsg);
+
+
 
 		ros::spinOnce();
 		rate.sleep();

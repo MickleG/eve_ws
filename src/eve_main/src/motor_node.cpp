@@ -23,6 +23,8 @@ bool liftingY = false;
 bool calibrationDone = false;
 bool columnDone = false;
 bool haltServoing = false;
+bool allColumnsDone = false;
+bool cameraRunning = false;
 
 int hardwareBuffer = 57; // distance in mm from realsense camera to end of scissor sheath
 int minZ = 30; // distance from realsense camera to start of camera sheath
@@ -30,13 +32,8 @@ int desiredZDistance = -5;
 int zDeadbandBuffer = 5; // target distance in mm away from vine with respect to realsense camera
 int xDeadbandBuffer = 15; // target distance away from center of frame in pixels for x visual servoing
 
-int xServoingSpeed = -1;
-int zServoingSpeed = -1;
 int xOffset = 0;
 int zOffset = 0;
-
-int centeredCounter = -1;
-int goalZ = -1;
 
 EndEffectorConfig mechanism(0, 0);
 
@@ -65,15 +62,28 @@ bool goToPosition(eve_main::GoToPosition::Request &req, eve_main::GoToPosition::
 }
 
 bool homeY(eve_main::HomeY::Request &req, eve_main::HomeY::Response &res) {
-	printf("%d\n", mechanism.yMotor.driveState);
+	mechanism.centeredCounter = -1;
+    mechanism.goalZ = -1;
+    mechanism.xServoingSpeed = -1;
+    mechanism.zServoingSpeed = -1;
+    initialCenteringDone = false;
+
+    ros::spinOnce();
+
 	while(mechanism.yMotor.driveState == 1) {
         mechanism.yMotor.setSpeed(-1 * req.speed); // speed limiting y stage due to lower speed cap than left and right motors
         mechanism.yMotor.controlLoopY();
+        mechanism.updateCurrentPosition();
     }
 
-    printf("done homing\n");
-
     mechanism.yMotor.setStepPosition(0);
+    mechanism.calibrateZero(req.speed);
+    mechanism.updateCurrentPosition();
+
+    mechanism.goToPosition(0, 200, 150);
+    mechanism.updateCurrentPosition();
+
+    mechanism.yMotor.setSpeed(100);
     
     return true;
 }
@@ -83,7 +93,7 @@ void updateHarvesting(const std_msgs::Bool::ConstPtr& msg) {
 }
 
 void updateGoalZ(const std_msgs::Int32::ConstPtr& msg) {
-	goalZ = msg -> data;
+	mechanism.goalZ = msg -> data;
 }
 
 void updateBlueDetected(const std_msgs::Bool::ConstPtr& msg) {
@@ -110,6 +120,14 @@ void updateHaltServoing(const std_msgs::Bool::ConstPtr& msg) {
 	haltServoing = msg -> data;
 }
 
+void updateAllColumnsDone(const std_msgs::Bool::ConstPtr& msg) {
+	allColumnsDone = msg -> data;
+}
+
+void updateCameraRunning(const std_msgs::Bool::ConstPtr& msg) {
+	cameraRunning = msg -> data;
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "motor_run_node");
 	ros::NodeHandle nh;
@@ -125,18 +143,23 @@ int main(int argc, char **argv) {
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
 	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
 	ros::Subscriber haltServoingSub = nh.subscribe("halt_servoing", 10, updateHaltServoing);
+	ros::Subscriber allColumnsDoneSub = nh.subscribe("all_columns_done", 10, updateAllColumnsDone);
+	ros::Subscriber cameraRunningSub = nh.subscribe("camera_running", 10, updateCameraRunning);
+
 
 	ros::ServiceServer getPositionService = nh.advertiseService("get_position", getPosition);
 	ros::ServiceServer goToPositionService = nh.advertiseService("go_to_position", goToPosition);
 	ros::ServiceServer homeYService = nh.advertiseService("home_y", homeY);
 
-	ros::Rate rate(100000);
+	ros::Rate rate(10000);
 
-	usleep(100000); // add delay to prevent motor jerk
+	while(!cameraRunning) {
+		ros::spinOnce();
+		rate.sleep();
+	}
 
-	// printf("motors running\n");
 
-	mechanism.calibrateZero(50);
+	mechanism.calibrateZero(100);
 	mechanism.updateCurrentPosition();
 
 	// cout << "current Z: " << mechanism.zPosition << endl;
@@ -152,60 +175,60 @@ int main(int argc, char **argv) {
 
 	// calibrationDone = true;
 
-	while(ros::ok()) {
+	while(ros::ok() && !allColumnsDone) {
 		eve_main::EndEffectorPosition endEffectorPositionMsg;
 		std_msgs::Bool initialCenteringDoneMsg;
 		std_msgs::Bool calibrationDoneMsg;
 		
-		if(goalZ > 0 && !harvesting) {
+		if(mechanism.goalZ > 0 && !harvesting) {
 			if(!findingZ && !harvesting) {
 				if(abs(xOffset) < xDeadbandBuffer) {
-					xServoingSpeed = 0;
+					mechanism.xServoingSpeed = 0;
 					findingZ = true;
 				} else {
-					xServoingSpeed = xOffset;
+					mechanism.xServoingSpeed = xOffset;
 				}
 
-				mechanism.moveInX(-xServoingSpeed);
+				mechanism.moveInX(-mechanism.xServoingSpeed);
 				mechanism.updateCurrentPosition();
 			}
 
 			if(findingZ && !blueDetected && !haltServoing) {
-				zOffset = goalZ - hardwareBuffer;
+				zOffset = mechanism.goalZ - hardwareBuffer;
 
 				if((abs(zOffset - desiredZDistance)) < zDeadbandBuffer) {
-					zServoingSpeed = 0;
+					mechanism.zServoingSpeed = 0;
 					findingZ = false;
 				} else {
 					if(zOffset >= 130) {
 						zOffset = 130;
 					} else {
-						zServoingSpeed = zOffset - desiredZDistance;
+						mechanism.zServoingSpeed = zOffset - desiredZDistance;
 					}
 					
 				}
 
-				// std::cout << "z_speed: " << zServoingSpeed << std::endl;
+				// std::cout << "z_speed: " << mechanism.zServoingSpeed << std::endl;
 
-				mechanism.moveInZ(zServoingSpeed);
+				mechanism.moveInZ(mechanism.zServoingSpeed);
 				mechanism.updateCurrentPosition();
 			}
 
-			if(xServoingSpeed == 0 && zServoingSpeed == 0) {
-				centeredCounter++;
-				if(centeredCounter >= std::numeric_limits<int>::max()) {
-					centeredCounter = 1;
+			if(mechanism.xServoingSpeed == 0 && mechanism.zServoingSpeed == 0) {
+				mechanism.centeredCounter++;
+				if(mechanism.centeredCounter >= std::numeric_limits<int>::max()) {
+					mechanism.centeredCounter = 1;
 				}
 			}
 		}
 
-		if(liftingY && !columnDone) {
+		if(liftingY && !columnDone && initialCenteringDone) {
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
 			mechanism.yMotor.controlLoopY();
 		}
 
-		if(centeredCounter == 0) {
+		if(mechanism.centeredCounter >= 0) {
 			initialCenteringDone = true;
 		}
 
