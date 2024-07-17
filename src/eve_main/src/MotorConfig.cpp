@@ -53,10 +53,10 @@ using namespace std;
             limitOutside = 2;
         }
         
-        pinMode(limitOutside, INPUT);      	
+        pinMode(limitOutside, INPUT);       
         pullUpDnControl(limitOutside, PUD_UP); 
 
-        pinMode(limitInside, INPUT);      	   
+        pinMode(limitInside, INPUT);           
         pullUpDnControl(limitInside, PUD_UP); 
         
         pinMode(stepPin, OUTPUT);
@@ -89,10 +89,10 @@ using namespace std;
         limitInside = limIn;
 
         
-        pinMode(limitOutside, INPUT);      	
+        pinMode(limitOutside, INPUT);       
         pullUpDnControl(limitOutside, PUD_UP); 
 
-        pinMode(limitInside, INPUT);      	   
+        pinMode(limitInside, INPUT);           
         pullUpDnControl(limitInside, PUD_UP); 
         
         pinMode(stepPin, OUTPUT);
@@ -462,7 +462,7 @@ using namespace std;
         {
             case 1:
 
-                motorDrive(); // run the motor at setspeed until switch is determed to be pressed in the line below
+                motorDriveY(); // run the motor at setspeed until switch is determed to be pressed in the line below
 
                 if(bottomSwitch)
                 {

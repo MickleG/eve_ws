@@ -68,6 +68,11 @@ using namespace std;
         yPosition = 0; // relative to bottom of macron
         zPosition = 0; // relative to motor plane
 
+        centeredCounter = -1;
+        goalZ = -1;
+        xServoingSpeed = -1;
+        zServoingSpeed = -1;
+
         //xDirection = 0; // right relative to robot = (+)
         //zDirection = 0; // forward relative to robot = (+)
 
