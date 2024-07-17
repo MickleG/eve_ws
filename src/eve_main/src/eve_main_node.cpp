@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
 
-			while(abs(eeYPosition - currentY) <= 37) {
+			while(abs(eeYPosition - currentY) <= 1) {
 				liftingY = true;
 				liftingYMsg.data = true;
 				liftingYPub.publish(liftingYMsg);
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
 
 				std::cout << "lifting to next servo zone" << std::endl;
 				
-				while(abs(eeYPosition - currentY) <= 150) {
+				while(abs(eeYPosition - currentY) <= 120) {
 					liftingY = true;
 					liftingYMsg.data = true;
 					liftingYPub.publish(liftingYMsg);

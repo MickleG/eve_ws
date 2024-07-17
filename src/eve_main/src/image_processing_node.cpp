@@ -109,6 +109,9 @@ int main(int argc, char **argv) {
 			cameraRunning = false;
 		}
 
+		harvesting = false;
+		harvestZoneDetected = false;
+
 		cameraRunningMsg.data = cameraRunning;
 		cameraRunningPub.publish(cameraRunningMsg);
 		ros::spinOnce();
@@ -191,6 +194,8 @@ int main(int argc, char **argv) {
 
 		vector<int> cupPoints;
 
+		int topmostBlueBuffer = 5;
+
 		for(int v = 0; v < cupMask.rows; v++) {
 			for(int u = 0; u < cupMask.cols; u++) {
 				if(cupMask.at<unsigned char>(v, u) == 255) {
@@ -206,30 +211,42 @@ int main(int argc, char **argv) {
 
 
 		std::sort(cupPoints.begin(), cupPoints.end(), [](const int& a, const int& b) {
-			return a > b;
+			return a < b;
 		});
 
-		std::vector<int> largest_v_values(cupPoints.begin(), cupPoints.begin() + std::min(num_min_cup_points, static_cast<int>(cupPoints.size())));
+		std::vector<int> smallest_v_values(cupPoints.begin(), cupPoints.begin() + std::min(num_min_cup_points, static_cast<int>(cupPoints.size())));
 
 		v_avg = 0;
-		float v_avg_storage = 0;
-		int v_counter = 0;
 
-		for(int i = 0; i < int(largest_v_values.size()); i++) {
-			v_avg_storage += largest_v_values[i];
-			v_counter++;
+		if(smallest_v_values.size() > 0) {
+
+			if(smallest_v_values[0] > topmostBlueBuffer) {
+
+				float v_avg_storage = 0;
+				int v_counter = 0;
+
+				for(int i = 0; i < int(smallest_v_values.size()); i++) {
+					v_avg_storage += smallest_v_values[i];
+					v_counter++;
+				}
+
+				v_avg = int(v_avg_storage / float(v_counter));
+
+				// if(v_avg >= 200 && !harvesting && initialCenteringDone) {
+				if(v_avg >= 150 && !harvesting && initialCenteringDone) {
+					harvestZoneDetected = true;
+					cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
+
+				} else {
+					harvestZoneDetected = false;
+					cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(255, 0, 255), -1);
+				}
+
+			} else {
+				v_avg = 0;
+			}
 		}
 
-		v_avg = int(v_avg_storage / float(v_counter));
-
-		if(v_avg >= 200 && !harvesting && initialCenteringDone) {
-			harvestZoneDetected = true;
-		} else {
-			harvestZoneDetected = false;
-		}
-
-		cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
-            
 
 		if(!harvesting && liftingY && initialCenteringDone) {
 			if(totalCupPixels > blueThresholdPixels) {
@@ -393,7 +410,7 @@ int main(int argc, char **argv) {
 		cv::Point centerX(avg_u, int(resolution[1] / 2));
 		cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-		// cv::imshow("image", rgb_image);
+		cv::imshow("image", rgb_image);
 
 
 		counter++;
