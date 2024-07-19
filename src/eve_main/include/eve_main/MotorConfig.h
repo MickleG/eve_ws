@@ -54,14 +54,14 @@ public:
     // Constructors
     MotorConfig(char Side);
 
-    MotorConfig(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn);
-    MotorConfig(uint8_t s, uint8_t d, uint8_t limBottom);
+    MotorConfig(uint8_t step, uint8_t dir, uint8_t limOut, uint8_t limIn);
+    MotorConfig(uint8_t step, uint8_t dir, uint8_t limBottom);
 
     MotorConfig();
 
     // SET FUNCTIONS
-    void setHardware(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn);
-    void setHardware(uint8_t s, uint8_t d, uint8_t limBottom);
+    void setHardware(uint8_t step, uint8_t dir, uint8_t limOut, uint8_t limIn);
+    void setHardware(uint8_t step, uint8_t dir, uint8_t limBottom);
 
     void setStepPosition(uint16_t steps);
 

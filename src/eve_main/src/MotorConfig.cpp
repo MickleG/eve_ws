@@ -78,12 +78,12 @@ using namespace std;
 
     }
 
-    MotorConfig::MotorConfig(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn)
+    MotorConfig::MotorConfig(uint8_t step, uint8_t dir, uint8_t limOut, uint8_t limIn)
     {
         wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
 
-        stepPin = s; // set new hardware gpio pin for motor step pin
-        dirPin = d; // set new hardware gpio pin for motor direciton 
+        stepPin = step; // set new hardware gpio pin for motor step pin
+        dirPin = dir; // set new hardware gpio pin for motor direciton 
 
         limitOutside = limOut;
         limitInside = limIn;
@@ -113,12 +113,12 @@ using namespace std;
         setSpeed(0);
     }
 
-    MotorConfig::MotorConfig(uint8_t s, uint8_t d, uint8_t limBottom)
+    MotorConfig::MotorConfig(uint8_t step, uint8_t dir, uint8_t limBottom)
     {
         wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
 
-        stepPin = s; // set new hardware gpio pin for motor step pin
-        dirPin = d; // set new hardware gpio pin for motor direciton 
+        stepPin = step; // set new hardware gpio pin for motor step pin
+        dirPin = dir; // set new hardware gpio pin for motor direciton 
 
         limitBottom = limBottom;
 
@@ -166,12 +166,12 @@ using namespace std;
     // SET FUNCTIONS //
     ///////////////////////////////////////////////////////////////////////
 
-    void MotorConfig::setHardware(uint8_t s, uint8_t d, uint8_t limOut, uint8_t limIn)
+    void MotorConfig::setHardware(uint8_t step, uint8_t dir, uint8_t limOut, uint8_t limIn)
     {
         wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
 
-        stepPin = s; // set new hardware gpio pin for motor step pin
-        dirPin = d; // set new hardware gpio pin for motor direciton 
+        stepPin = step; // set new hardware gpio pin for motor step pin
+        dirPin = dir; // set new hardware gpio pin for motor direciton 
 
         limitOutside = limOut; 
         limitInside = limIn;
@@ -186,12 +186,12 @@ using namespace std;
         pinMode(dirPin, OUTPUT);
     }
 
-    void MotorConfig::setHardware(uint8_t s, uint8_t d, uint8_t limBottom)
+    void MotorConfig::setHardware(uint8_t step, uint8_t dir, uint8_t limBottom)
     {
         wiringPiSetupGpio(); // Initialize wiringPi -- using Broadcom pin numbers
 
-        stepPin = s; // set new hardware gpio pin for motor step pin
-        dirPin = d; // set new hardware gpio pin for motor direciton 
+        stepPin = step; // set new hardware gpio pin for motor step pin
+        dirPin = dir; // set new hardware gpio pin for motor direciton 
 
         limitBottom = limBottom;
         

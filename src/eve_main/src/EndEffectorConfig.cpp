@@ -44,9 +44,9 @@ using namespace std;
     EndEffectorConfig::EndEffectorConfig(int left, int right)
     {
 
-        leftMotor.setHardware(17, 18, 5, 1);
-        rightMotor.setHardware(4, 27, 2, 3);
-        yMotor.setHardware(25, 24, 6); // defines the y stage motor, up is positive speed
+        leftMotor.setHardware(step=17, dir=18, limOut=5, limIn=1);
+        rightMotor.setHardware(step=4, dir=27, limOut=2, limIn=3);
+        yMotor.setHardware(step=25, dir=24, limBottom=6); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);
@@ -68,7 +68,7 @@ using namespace std;
         yPosition = 0; // relative to bottom of macron
         zPosition = 0; // relative to motor plane
 
-        centeredCounter = -1;
+        centeredCounter = 0;
         goalZ = -1;
         xServoingSpeed = -1;
         zServoingSpeed = -1;
@@ -162,14 +162,10 @@ using namespace std;
                 leftMotor.goalPosition(); // always use goalPosition() in a loop, as "controlLoop" is not in a while loop in goalPosition() and is called based on condition
                 rightMotor.goalPosition();
                 updateCurrentPosition();
-                // cout << "currentPosition: " << xPosition << ", " << yPosition << ", " << zPosition << endl;
-                motorMoving = true;
             }
         }
 
         updateCurrentPosition();
-        motorMoving = false;
-
     }
 
 

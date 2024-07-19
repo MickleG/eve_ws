@@ -7,6 +7,7 @@
 #include <iostream>
 #include <wiringPi.h>
 
+// Class and ROS Service include statements
 #include "eve_main/EndEffectorPosition.h"
 #include "eve_main/GetPosition.h"
 #include "eve_main/GoToPosition.h"
@@ -14,35 +15,36 @@
 #include "eve_main/Cutter.h"
 #include "eve_main/Grip.h"
 
-const int totalPlantsPerVine = 3;
-const int totalColumns = 3;
+const int totalPlantsPerVine = 3; // number of plants to be harvested on each vine
+const int totalColumns = 3; // number of vines on a greenhouse row
 
+bool dryRunMode = false; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
+
+const float dropZoneX = 0; // location in x (mm) at which to drop plants
+const float dropZoneZ = 150; // location in z (mm) at which to drop plants
+const float goToPositionSpeed = 150; // speed (mm/s) at which to move both towards and away from drop zone at
+const float homingYSpeed = 100; // speed (mm/s) at which to move y-axis to home y
+
+int harvestCount = 0; // variable tracking how many harvests have been done, to know when top of vine column is reached
+int columnCount = 0; // variable tracking how many vines have been harvested, to know when the end of the greenhouse row is reached
+int curLimit = 30; // current limit for the dynamixels in the Grip class
+int goalCur = 200; // 
+
+
+// local state variables for storing ROS message information
 bool harvesting = false;
 bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
 bool liftingY = false;
 bool columnDone = false;
-bool haltServoing = false;
+bool haltZServoing = false;
 bool allColumnsDone = false;
-
-bool dryRunMode = false;
 
 float eeXPosition = 0;
 float eeYPosition = 0;
 float eeZPosition = 0;
 
-float dropZoneX = 0;
-float dropZoneZ = 150;
-float bottomY = 0;
 
-float goToPositionSpeed = 150;
-float homingYSpeed = 100;
-
-
-int harvestCount = 0;
-int columnCount = 0;
-int curLimit = 30;
-int goalCur = 200;
 
 
 
@@ -73,7 +75,7 @@ int main(int argc, char **argv) {
 	ros::Publisher harvestingPub = nh.advertise<std_msgs::Bool>("harvesting", 10);
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
 	ros::Publisher columnDonePub = nh.advertise<std_msgs::Bool>("column_done", 10);
-	ros::Publisher haltServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
+	ros::Publisher haltZServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher allColumnsDonePub = nh.advertise<std_msgs::Bool>("all_columns_done", 10);
 
@@ -116,22 +118,24 @@ int main(int argc, char **argv) {
 		std_msgs::Bool harvestingMsg;
 		std_msgs::Bool harvestZoneDetectedMsg;
 		std_msgs::Bool columnDoneMsg;
-		std_msgs::Bool haltServoingMsg;
+		std_msgs::Bool haltZServoingMsg;
 		std_msgs::Bool initialCenteringDoneMsg;
 		std_msgs::Bool allColumnsDoneMsg;
 
-		if(initialCenteringDone && !harvestZoneDetected && !columnDone) {
+		if(initialCenteringDone && !harvestZoneDetected && !columnDone) { // checking for if upwards y movement should occur
+			// publish true for liftingY to allow upwards y movement
 			liftingY = true;
 			liftingYMsg.data = true;
 			liftingYPub.publish(liftingYMsg);
-		} else if(harvestZoneDetected && !columnDone) {
+		} else if(harvestZoneDetected && !columnDone) { // checking if harvest zone has been reached and if the column still has plants to be harvested to start the harvesting process
 
-			getPositionClient.call(getPositionService);
+			getPositionClient.call(getPositionService); // collect current position at this moment in time to use for later
 
-			float currentY = getPositionService.response.yPosition;
+			float currentY = getPositionService.response.yPosition; // extract y value from current position
 
 			std::cout << "cup in position, stopping servoing" << std::endl;
 
+			// publishing true for harvesting to stop servoing in both x and z axis
 			harvesting = true;
 			harvestingMsg.data = harvesting;
 			harvestingPub.publish(harvestingMsg);
@@ -140,7 +144,7 @@ int main(int argc, char **argv) {
 
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
-
+			// this portion is still being worked on, will be removed once image processing is updated
 			while(abs(eeYPosition - currentY) <= 1) {
 				liftingY = true;
 				liftingYMsg.data = true;
@@ -150,7 +154,7 @@ int main(int argc, char **argv) {
 				rate.sleep();
 			}
 
-			
+			// stopping lifting in y, as we are now at harvesting zone
 			liftingY = false;
 			liftingYMsg.data = liftingY;
 			liftingYPub.publish(liftingYMsg);
@@ -161,66 +165,65 @@ int main(int argc, char **argv) {
 			std::cout << "y movement done, at top of cup" << std::endl;
 			std::cout << "gripping and cutting" << std::endl;
 
-			if(!dryRunMode) {
+			if(!dryRunMode) { // performing the grip and cut as long as dryRunMode is off
 				grip(servo1, servo2);
 				usleep(50000);
 				cutter.cutPlant();
 			}
 
-			// Getting current position of end effector
+			// Getting current position of end effector at this moment in time. Will be stored so end effector can return back after the drop operation
 			getPositionClient.call(getPositionService);
-
 			float currentX = getPositionService.response.xPosition;
 			currentY = getPositionService.response.yPosition;
 			float currentZ = getPositionService.response.zPosition;
 
 
-			// Returning to home
+			// Moving end effector to drop zone to perform the drop
 			goToPositionService.request.desiredXPosition = dropZoneX;
 			goToPositionService.request.desiredZPosition = dropZoneZ;
 			goToPositionService.request.speed = goToPositionSpeed;
-
 			goToPositionClient.call(goToPositionService);
 
+			// Dropping the plant
 			std::cout << "dropping" << std::endl;
 			drop(servo1, servo2);
 			usleep(500000);
 
-			harvestCount++;
+			harvestCount++; // incrementing the harvestCount now that plant is dropped
 
 
-			
+			// Check if the newly harvested plant is the topmost plant in the vine. If it is, mark column as done
 			if(harvestCount == totalPlantsPerVine) {
 				columnDone = true;
 				columnCount++;
-			} else {
+			} else { // if plant is not top plant, perform steps to stage end effector for next plant
 				std::cout << "returning to harvest zone" << std::endl;
 
-				// Returning to plant vine
+				// Returning to previously stored vine position
 				goToPositionService.request.desiredXPosition = currentX;
 				goToPositionService.request.desiredZPosition = currentZ;
 				goToPositionService.request.speed = goToPositionSpeed;
-
 				goToPositionClient.call(goToPositionService);
 
-				
+				// set harvesting to false to allow for servoing again
 				harvesting = false;
 				harvestingMsg.data = harvesting;
 				harvestingPub.publish(harvestingMsg);
 				ros::spinOnce();
 
-				currentY = getPositionService.response.yPosition;
+				currentY = getPositionService.response.yPosition; // collect current yPosition at this moment in time in order to lift up a set amount. This lift will allow x-servoing but disable z-servoing to prevent the end effector from following the back vine rib
 
 				std::cout << "lifting to next servo zone" << std::endl;
 				
+				// Move in y with z-servoing disabled for 120mm
 				while(abs(eeYPosition - currentY) <= 120) {
 					liftingY = true;
 					liftingYMsg.data = true;
 					liftingYPub.publish(liftingYMsg);
 
-					haltServoing = true;
-					haltServoingMsg.data = true;
-					haltServoingPub.publish(haltServoingMsg);
+					haltZServoing = true;
+					haltZServoingMsg.data = true;
+					haltZServoingPub.publish(haltZServoingMsg);
 
 					ros::spinOnce();
 					rate.sleep();
@@ -229,13 +232,15 @@ int main(int argc, char **argv) {
 				std::cout << "starting to servo again" << std::endl;
 			}
 
+			// Updating local variables to publish as ROS messages to signify that harvesting is completely done
 			liftingY = false;
 			harvestZoneDetected = false;
 			harvesting = false;
-			haltServoing = false;
+			haltZServoing = false;
 		
 		}
 
+		// If column is done (last plant has been harvested), then reset state variables to initial values and call homeY service to reset robot back to bottom of the rail
 		if(columnDone) {
 
 			std::cout << "column done, going to new column" << std::endl;
@@ -252,13 +257,13 @@ int main(int argc, char **argv) {
 
 			columnDone = false;
 			
-
 			harvestCount = 0;
 
 			printf("homing done\n");
 
 		}
 
+		// Checking if all columns have been completed, update local variables for publishing to ROS message
 		if(columnCount >= totalColumns) {
 			allColumnsDone = true;
 		} else {
@@ -267,18 +272,19 @@ int main(int argc, char **argv) {
 
 		
 
+		// Setting and publishing ROS messages
 		liftingYMsg.data = liftingY;
 		harvestingMsg.data = harvesting;
 		harvestZoneDetectedMsg.data = harvestZoneDetected;
 		columnDoneMsg.data = columnDone;
-		haltServoingMsg.data = haltServoing;
+		haltZServoingMsg.data = haltZServoing;
 		allColumnsDoneMsg.data = allColumnsDone;
 
 		liftingYPub.publish(liftingYMsg);
 		harvestingPub.publish(harvestingMsg);
 		harvestZoneDetectedPub.publish(harvestZoneDetectedMsg);
 		columnDonePub.publish(columnDoneMsg);
-		haltServoingPub.publish(haltServoingMsg);
+		haltZServoingPub.publish(haltZServoingMsg);
 		allColumnsDonePub.publish(allColumnsDoneMsg);
 
 

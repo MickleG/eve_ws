@@ -13,6 +13,15 @@
 #include <opencv2/opencv.hpp>
 #include <librealsense2/rs.hpp>
 
+
+const int resolution[2] = {424, 240}; // resolution to capture original rgb and depth streams at
+const int cropped_gripper_bounds[2] = {130, 400}; // resolution that crops out grippers and scissor sheath from field of view
+const int num_min_vine_rib_points = 2000; // desired number of points to find the average minimum z value for along the vine's front rib
+const int num_min_cup_points = 200; // desired number of cup pixels used to extract minimum depth values from to detect top of cup
+const int blueThresholdPixels = 100; // desired number of pixels to be blue to signify the cup being detected
+
+
+// local state variables for storing ROS message information
 bool harvesting = false;
 bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
@@ -25,9 +34,12 @@ int v_avg = 0;
 int goalZ = -1;
 int xOffset = 0;
 
+
+
 using namespace std;
 using namespace cv;
 
+// Used to store depth measured from RealSense matched with its corresponding pixel location
 struct PointValue {
 	float value;
 	int v;
@@ -35,62 +47,51 @@ struct PointValue {
 };
 
 
+// ***ROS Subscriber Callbacks*** //
 void updateHarvesting(const std_msgs::Bool::ConstPtr& msg) {
 	harvesting = msg -> data;
 }
-
 void updateInitialCenteringDone(const std_msgs::Bool::ConstPtr& msg) {
 	initialCenteringDone = msg -> data;
 }
-
 void updateLiftingY(const std_msgs::Bool::ConstPtr& msg) {
 	liftingY = msg -> data;
 }
-
 void updateAllColumnsDone(const std_msgs::Bool::ConstPtr& msg) {
 	allColumnsDone = msg -> data;
 }
+
+
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "image_processing_node");
 	ros::NodeHandle nh;
 
+	// Initialization of ROS publishers
 	ros::Publisher blueDetectedPub = nh.advertise<std_msgs::Bool>("blue_detected", 10);
 	ros::Publisher harvestZoneDetectedPub = nh.advertise<std_msgs::Bool>("harvest_zone_detected", 10);
 	ros::Publisher goalZPub = nh.advertise<std_msgs::Int32>("goal_z", 10);
 	ros::Publisher xOffsetPub = nh.advertise<std_msgs::Int32>("x_offset", 10);
 	ros::Publisher cameraRunningPub = nh.advertise<std_msgs::Bool>("camera_running", 10);
 
-
+	// Initialization of ROS subscribers with corresponding callback functions
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
 	ros::Subscriber allColumnsDoneSub = nh.subscribe("all_columns_done", 10, updateAllColumnsDone);
 
 
-	ros::Rate rate(15);
+	ros::Rate rate(15); // ROS rate set to 15 Hz in accordance with RealSense supported framerate for both rgb and depth streams
 
-
-	int resolution[2] = {424, 240};
-	int cropped_gripper_bounds[2] = {130, 400};
-
-	// printf("image processing running\n");
-
+	// Initialize realsense stream and corresponding rgb and depth parameters
 	rs2::pipeline pipe;
 	rs2::config cfg;
-
 	cfg.enable_stream(RS2_STREAM_COLOR, resolution[0], resolution[1], RS2_FORMAT_BGR8, 15);
 	cfg.enable_stream(RS2_STREAM_DEPTH, resolution[0], resolution[1], RS2_FORMAT_Z16, 15);
-
 	pipe.start(cfg);
 
+	// Align depth image to color image through camera extrinsics
 	rs2::align align_to_color(RS2_STREAM_COLOR);
-    
-	int num_min_vine_rib_points = 2000;
-	int num_min_cup_points = 200;
-
-	int blueThresholdPixels = 100;
-	int counter = 0;
 	
 	
 	while(ros::ok() && !allColumnsDone) {
@@ -411,9 +412,6 @@ int main(int argc, char **argv) {
 		cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
 		cv::imshow("image", rgb_image);
-
-
-		counter++;
 
 		blueDetectedMsg.data = blueDetected;
 		harvestZoneDetectedMsg.data = harvestZoneDetected;

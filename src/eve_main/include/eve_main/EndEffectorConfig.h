@@ -53,12 +53,11 @@ class EndEffectorConfig
         float yCord = 0;
         float zCord = 0;
 
-        int centeredCounter = -1;
+        int centeredCounter = 0;
         int goalZ = -1;
         int xServoingSpeed = -1;
         int zServoingSpeed = -1;
-
-        bool motorMoving = false;
+        int maxServoingSpeed = 130;
 
         //float xDirection; // x component of direction vector (direction vector = vector of magnitude 1.0)
         //float zDirection; // z component of direction vector (direction vector = vector of magnitude 1.0)
