@@ -7,7 +7,6 @@
 #include <iostream>
 #include <wiringPi.h>
 
-// Class and ROS Service include statements
 #include "eve_main/EndEffectorPosition.h"
 #include "eve_main/GetPosition.h"
 #include "eve_main/GoToPosition.h"
@@ -16,7 +15,7 @@
 #include "eve_main/Grip.h"
 
 const int totalPlantsPerVine = 3; // number of plants to be harvested on each vine
-const int totalColumns = 3; // number of vines on a greenhouse row
+const int totalColumns = 1; // number of vines on a greenhouse row
 
 bool dryRunMode = false; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
 
@@ -145,7 +144,7 @@ int main(int argc, char **argv) {
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
 			// this portion is still being worked on, will be removed once image processing is updated
-			while(abs(eeYPosition - currentY) <= 1) {
+			while(abs(eeYPosition - currentY) <= 33) {
 				liftingY = true;
 				liftingYMsg.data = true;
 				liftingYPub.publish(liftingYMsg);
@@ -169,6 +168,8 @@ int main(int argc, char **argv) {
 				grip(servo1, servo2);
 				usleep(50000);
 				cutter.cutPlant();
+			} else {
+				usleep(500000);
 			}
 
 			// Getting current position of end effector at this moment in time. Will be stored so end effector can return back after the drop operation

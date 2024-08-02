@@ -7,7 +7,6 @@
 #include <iostream>
 #include <wiringPi.h>
 
-// Class and ROS Service include statements
 #include "eve_main/EndEffectorConfig.h"
 #include "eve_main/MotorConfig.h"
 #include "eve_main/EndEffectorPosition.h"
@@ -16,9 +15,11 @@
 #include "eve_main/HomeY.h"
 
 const int hardwareBuffer = 57; // distance in mm from front of Intel RealSense D405 camera to the end of the scissor sheath (the flat portion furthest from the realsense lens). This is driven from the hardware, so if this dimension changes, this variable needs to change accordingly
-const int desiredZDistance = -5; // distance in mm that should be targeted for z-axis visual-servoing between the front of the scissor sheath and the front rib of the vine. This value is negative if the scissor sheath extends past the vine rib (which currently is the case)
+const int desiredZDistance = -10; // distance in mm that should be targeted for z-axis visual-servoing between the front of the scissor sheath and the front rib of the vine. This value is negative if the scissor sheath extends past the vine rib (which currently is the case)
 const int zDeadbandBuffer = 5; // margin of error in mm allowed for z-axis visual servoing
 const int xDeadbandBuffer = 15; // margin of error in pixels allowed for x-axis visual servoing
+
+int ySpeeds[4] = {-220, 0, 220, 0};
 
 // local state variables for storing ROS message information
 bool harvesting = false;
@@ -33,10 +34,12 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
+bool testMotor = false;
+
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
 int zOffset = 0; // used for storing the distance in mm between the front of the vine rib and the end of the scissor sheath - this value should be within zDeadbandBuffer mm of desiredZDistance when z-axis visual servoing is complete 
 
-EndEffectorConfig mechanism(left=0, right=0); // initializing EndEffectorConfig object for the robot's end effector
+EndEffectorConfig mechanism(0, 0); // initializing EndEffectorConfig object for the robot's end effector
 
 using namespace std;
 
@@ -86,11 +89,11 @@ bool homeY(eve_main::HomeY::Request &req, eve_main::HomeY::Response &res) {
     mechanism.yMotor.setStepPosition(0);
     mechanism.calibrateZero(req.speed);
     mechanism.updateCurrentPosition();
-    mechanism.goToPosition(0, 200, 150);
+    mechanism.goToPosition(0, 250, 150);
     mechanism.updateCurrentPosition();
 
     // Reinitializing yMotor properties
-    mechanism.yMotor.setSpeed(100);
+    mechanism.yMotor.setSpeed(300);
     mechanism.yMotor.setAcceleration(50);
     
     return true;
@@ -157,22 +160,42 @@ int main(int argc, char **argv) {
 
 	ros::Rate rate(10000); // Setting a high ROS rate due to high frequency motor commands
 
-	// Blocking continuation of node execution until image_processing_node publishes that camera is running
+	int ySpeed = ySpeeds[0];
+	int ySpeedCounter = 0;
+
+	// Initialize y motor properties
+	mechanism.yMotor.setSpeed(ySpeed);
+	mechanism.yMotor.setAcceleration(10);
+
+
+	while(testMotor) {
+		for(int i = 0; i < 1500000; i++) {
+			mechanism.yMotor.motorDriveY();
+			mechanism.updateCurrentPosition();
+			mechanism.yMotor.controlLoopY();
+		}
+
+		ySpeedCounter++;
+		if(ySpeedCounter == 4) {
+			ySpeedCounter = 0;
+		}
+		ySpeed = ySpeeds[ySpeedCounter];
+
+		mechanism.yMotor.setSpeed(ySpeed);
+	}
+
+	// Blocking continuation of ndoe execution until image_processing_node publishes that camera is running
 	while(!cameraRunning) {
 		ros::spinOnce();
 		rate.sleep();
 	}
 
-
-	// Calibration and moving to starting position at x=0, z=200
+	// Calibration and moving to starting position at x=0, z=250
 	mechanism.calibrateZero(100);
 	mechanism.updateCurrentPosition();
-	mechanism.goToPosition(0, 200, 150);
+	mechanism.goToPosition(0, 250, 150);
 	mechanism.updateCurrentPosition();
 
-	// Initialize yMotor properties
-	mechanism.yMotor.setSpeed(100);
-	mechanism.yMotor.setAcceleration(50);
 
 	// main motor loop, execution stops when the entire wall has been completed signified by allColumnsDone
 	while(ros::ok() && !allColumnsDone) {

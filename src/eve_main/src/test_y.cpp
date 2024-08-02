@@ -15,6 +15,8 @@ bool harvesting = true; // only publishing harvesting to bypass servoing
 bool calibrationDone = false;
 bool liftingDone = false;
 
+const int target = 500;
+
 float currentY = 0;
 
 void updateEndEffectorPosition(const eve_main::EndEffectorPosition::ConstPtr& msg) {
@@ -52,7 +54,7 @@ int main(int argc, char **argv) {
 
 		std::cout << "Y BEFORE MOVE: " << currentY << std::endl;
 			
-		while(abs(eeYPosition - currentY) <= 1000) {
+		while(abs(eeYPosition - currentY) <= target) {
 			liftingY = true;
 			liftingYMsg.data = liftingY;
 			liftingYPub.publish(liftingYMsg);

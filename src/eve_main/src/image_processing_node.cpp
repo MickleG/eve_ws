@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 
 
 		std::sort(cupPoints.begin(), cupPoints.end(), [](const int& a, const int& b) {
-			return a < b;
+			return a > b;
 		});
 
 		std::vector<int> smallest_v_values(cupPoints.begin(), cupPoints.begin() + std::min(num_min_cup_points, static_cast<int>(cupPoints.size())));
@@ -233,8 +233,8 @@ int main(int argc, char **argv) {
 
 				v_avg = int(v_avg_storage / float(v_counter));
 
-				// if(v_avg >= 200 && !harvesting && initialCenteringDone) {
-				if(v_avg >= 150 && !harvesting && initialCenteringDone) {
+				if(v_avg >= 200 && !harvesting && initialCenteringDone) {
+				// if(v_avg >= 150 && !harvesting && initialCenteringDone) {
 					harvestZoneDetected = true;
 					cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
 
@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
 				depthImage.at<double>(v, u) = val;
 				cv::Vec3b hsv_pixel = hsv_image.at<cv::Vec3b>(v, u);
 
-				// bool hue_condition = 0 <= hsv_pixel[0] && 180 >= hsv_pixel[0] && (30 > hsv_pixel[0] || 90 < hsv_pixel[0]);
+				//bool hue_condition = 0 <= hsv_pixel[0] && 180 >= hsv_pixel[0] && (30 > hsv_pixel[0] || 90 < hsv_pixel[0]);
 				bool hue_condition = !(40 <= hsv_pixel[0] && 80 >= hsv_pixel[0]);
 				bool sat_condition = 0 <= hsv_pixel[1] && 150 >= hsv_pixel[1];
 
@@ -365,7 +365,7 @@ int main(int argc, char **argv) {
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		// cv::imshow("vine_rib_filtered", smallest_values_filtered);
+		cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;

@@ -220,8 +220,8 @@ using namespace std;
     // setSpeed() sets the step delay (dictates motor speed), motor direction, and logs the prev in global vars
     void MotorConfig::setSpeed(float speed) // use value from -100 to 100 to represent % speed -- deadband -1% to +1% -- see motorConfig.pdf for speed charts
     {
-        
-        if((speed >= deadBandSpeed) && speed <= 160)
+        if(speed >= deadBandSpeed)
+        //if((speed >= deadBandSpeed) && speed <= 160)
         {
             digitalWrite(dirPin, 1); // if speed is positive, then drive inward
             currentDelay = (uint32_t)(4000000.0 / speed); // translate speed command to step delay in ns
@@ -229,7 +229,8 @@ using namespace std;
             currentSpeed = speed;
         }
 
-        else if((speed <= (-1 * deadBandSpeed)) && speed >= -160)
+				else if(speed <= (-1 * deadBandSpeed))
+        //else if((speed <= (-1 * deadBandSpeed)) && speed >= -160)
         {
             digitalWrite(dirPin, 0); // if speed is negative, then drive outward
             currentDelay = (uint32_t)(-4000000.0 / speed); // translate speed command to step delay in ns
@@ -247,7 +248,8 @@ using namespace std;
 
     void MotorConfig::setSpeedMagnitude(float speed)
     {
-        if(speed >= deadBandSpeed && speed <= 160)
+				if(speed >= deadBandSpeed)
+        //if(speed >= deadBandSpeed && speed <= 160)
         {
             currentDelay = (uint32_t)(4000000.0 / speed); // translate speed command to step delay in ns
             currentSpeed = speed;

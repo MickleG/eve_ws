@@ -1,0 +1,4 @@
+<launch>
+	<node name="motor_node" pkg="eve_main" type="motor_node" output="screen">
+	</node>
+</launch>

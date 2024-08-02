@@ -44,9 +44,9 @@ using namespace std;
     EndEffectorConfig::EndEffectorConfig(int left, int right)
     {
 
-        leftMotor.setHardware(step=17, dir=18, limOut=5, limIn=1);
-        rightMotor.setHardware(step=4, dir=27, limOut=2, limIn=3);
-        yMotor.setHardware(step=25, dir=24, limBottom=6); // defines the y stage motor, up is positive speed
+        leftMotor.setHardware(17, 18, 5, 1);
+        rightMotor.setHardware(4, 27, 2, 3);
+        yMotor.setHardware(25, 24, 6); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);
@@ -204,7 +204,7 @@ using namespace std;
             if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
-                goToPosition(0, 100, 100);
+                goToPosition(0, 250, 100);
                 startYCalib = true;
             }
 
@@ -228,7 +228,7 @@ using namespace std;
             if(rightMotor.driveState == 2)
             {
                 rightMotor.setStepPosition(0+256);
-                goToPosition(0, 100, 100);
+                goToPosition(0, 250, 100);
                 startYCalib = true;
             }
 
