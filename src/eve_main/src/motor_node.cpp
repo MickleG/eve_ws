@@ -34,7 +34,7 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
-bool testMotor = false;
+bool testMotor = true;
 
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
 int zOffset = 0; // used for storing the distance in mm between the front of the vine rib and the end of the scissor sheath - this value should be within zDeadbandBuffer mm of desiredZDistance when z-axis visual servoing is complete 
