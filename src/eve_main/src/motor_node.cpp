@@ -1,6 +1,8 @@
 #include "ros/ros.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32.h"
+#include "std_msgs/Int8.h"
+#include "geometry_msgs/Twist.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +21,7 @@ const int desiredZDistance = -10; // distance in mm that should be targeted for 
 const int zDeadbandBuffer = 5; // margin of error in mm allowed for z-axis visual servoing
 const int xDeadbandBuffer = 15; // margin of error in pixels allowed for x-axis visual servoing
 
-int ySpeeds[4] = {-220, 0, 220, 0};
+int ySpeeds[4] = {120, 0, -120, 0}; // Speeds that eve loops through when testing motor
 
 // local state variables for storing ROS message information
 bool harvesting = false;
@@ -34,7 +36,8 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
-bool testMotor = true;
+bool testMotor = true; // set to true if you want to test motor movement without full autonomy
+
 
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
 int zOffset = 0; // used for storing the distance in mm between the front of the vine rib and the end of the scissor sheath - this value should be within zDeadbandBuffer mm of desiredZDistance when z-axis visual servoing is complete 
@@ -140,7 +143,9 @@ int main(int argc, char **argv) {
 	// Initializaton of ROS publishers
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
-	
+	ros::Publisher tugbotLidarSafetyAreaPub = nh.advertise<std_msgs::Int8>("wheels_controller/lidar_safety_area", 10);
+	ros::Publisher tugbotCmdVelPub = nh.advertise<geometry_msgs::Twist>("wheels_controller/cmd_vel", 10);
+
 	// Initialization of ROS subscribers with corresponding callback functions
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber goalZSub = nh.subscribe("goal_z", 10, updateGoalZ);
@@ -169,10 +174,29 @@ int main(int argc, char **argv) {
 
 
 	while(testMotor) {
-		for(int i = 0; i < 1500000; i++) {
+		for(int i = 0; i < 150000; i++) {
+			std_msgs::Int8 lidarSafetyAreaMsg;
+			geometry_msgs::Twist cmdVelMsg;
+			
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
 			mechanism.yMotor.controlLoopY();
+
+			lidarSafetyAreaMsg.data = 0;
+
+			cmdVelMsg.linear.x = float(ySpeed) * 0.001;
+			cmdVelMsg.linear.y = 0.0;
+			cmdVelMsg.linear.z = 0.0;
+
+			cmdVelMsg.angular.x = 0.0;
+			cmdVelMsg.angular.y = 0.0;
+			cmdVelMsg.angular.z = 0.0;
+
+			//tugbotLidarSafetyAreaPub.publish(lidarSafetyAreaMsg);
+			//tugbotCmdVelPub.publish(cmdVelMsg);
+
+			//ros::spinOnce();
+			//rate.sleep();
 		}
 
 		ySpeedCounter++;

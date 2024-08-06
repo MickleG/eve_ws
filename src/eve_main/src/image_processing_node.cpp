@@ -365,7 +365,7 @@ int main(int argc, char **argv) {
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		cv::imshow("vine_rib_filtered", smallest_values_filtered);
+		//cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;
@@ -411,7 +411,7 @@ int main(int argc, char **argv) {
 		cv::Point centerX(avg_u, int(resolution[1] / 2));
 		cv::circle(rgb_image, centerX, 5, cv::Scalar(0, 0, 255), -1);
 
-		cv::imshow("image", rgb_image);
+		//cv::imshow("image", rgb_image);
 
 		blueDetectedMsg.data = blueDetected;
 		harvestZoneDetectedMsg.data = harvestZoneDetected;

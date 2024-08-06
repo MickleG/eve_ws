@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /root/eve_ws/install/lib;/opt/ros/noetic/lib)
+    foreach(path /root/eve_ws/install/lib;/root/eve_ws/devel/lib;/opt/ros/noetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
@@ -185,7 +185,7 @@ foreach(t ${eve_main_EXPORTED_TARGETS})
   endif()
 endforeach()
 
-set(depends "dynamixel_sdk;roscpp;std_msgs;message_runtime")
+set(depends "dynamixel_sdk;roscpp;std_msgs;geometry_msgs;message_runtime")
 foreach(depend ${depends})
   string(REPLACE " " ";" depend_list ${depend})
   # the package name of the dependency must be kept in a unique variable so that it is not overwritten in recursive calls

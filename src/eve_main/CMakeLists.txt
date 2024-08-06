@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamixel_sdk
   roscpp
   std_msgs
+	geometry_msgs
 	message_generation
 )
 
@@ -31,7 +32,7 @@ find_package(realsense2 REQUIRED PATHS /usr/local/lib/cmake/realsense2/)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES eve_main
-  CATKIN_DEPENDS dynamixel_sdk roscpp std_msgs message_runtime
+  CATKIN_DEPENDS dynamixel_sdk roscpp std_msgs geometry_msgs message_runtime
 )
 
 include_directories(

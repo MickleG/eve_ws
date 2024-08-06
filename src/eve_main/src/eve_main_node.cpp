@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32.h"
+#include "std_msgs/Empty.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@
 #include "eve_main/Grip.h"
 
 const int totalPlantsPerVine = 3; // number of plants to be harvested on each vine
-const int totalColumns = 1; // number of vines on a greenhouse row
+const int totalColumns = 2; // number of vines on a greenhouse row
 
 bool dryRunMode = false; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
 
@@ -38,6 +39,9 @@ bool liftingY = false;
 bool columnDone = false;
 bool haltZServoing = false;
 bool allColumnsDone = false;
+
+bool tugbotGripperAttached = false;
+bool tugbotCenteredSuccess = false;
 
 float eeXPosition = 0;
 float eeYPosition = 0;
@@ -63,6 +67,14 @@ void updateHarvestZoneDetected(const std_msgs::Bool::ConstPtr& msg) {
 	harvestZoneDetected = msg -> data;
 }
 
+void updateTugbotGripperAttached(const std_msgs::Bool::ConstPtr& msg) {
+	tugbotGripperAttached = msg -> data;
+}
+
+void updateTugbotCenteredSuccess(const std_msgs::Bool::ConstPtr& msg) {
+	tugbotCenteredSuccess = msg -> data;
+}
+
 
 int main(int argc, char **argv) {
 	// Starting ROS
@@ -77,10 +89,14 @@ int main(int argc, char **argv) {
 	ros::Publisher haltZServoingPub = nh.advertise<std_msgs::Bool>("halt_servoing", 10);
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher allColumnsDonePub = nh.advertise<std_msgs::Bool>("all_columns_done", 10);
+	ros::Publisher tugbotCenterGripperPub = nh.advertise<std_msgs::Empty>("gripper/center", 10);
+	ros::Publisher tugbotGripperAttachPub = nh.advertise<std_msgs::Bool>("gripper/attach", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber harvestZoneDetectedSub = nh.subscribe("harvest_zone_detected", 10, updateHarvestZoneDetected);
+	ros::Subscriber tugbotGripperAttachedSub = nh.subscribe("gripper/attach_sucess", 10, updateTugbotGripperAttached); // the topic names have success misspelled because it is misspelled in the tugbot's software. lmao portugal moment
+	ros::Subscriber tugbotCenteredSuccessSub = nh.subscribe("gripper/center_sucess", 10, updateTugbotCenteredSuccess);
 
 	// Establishing ROS Client for Service calls
 	ros::ServiceClient getPositionClient = nh.serviceClient<eve_main::GetPosition>("get_position");
@@ -97,20 +113,47 @@ int main(int argc, char **argv) {
 	Cutter cutter(16);
 
 	//Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
-    MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
-    MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
+  MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
+  MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
 
-    // servo1.PrintOperatingMode();
-    // servo2.PrintOperatingMode();
+  // servo1.PrintOperatingMode();
+  // servo2.PrintOperatingMode();
 
-    servo1.SetProfile(500, 400); // velocity=32000
-    servo2.SetProfile(500, 400);
+  servo1.SetProfile(500, 400); // velocity=32000
+  servo2.SetProfile(500, 400);
 
 	cutter.resetCut();
 	drop(servo1, servo2);
 
 	usleep(100000); // add delay to prevent motor jerk
 	
+	std_msgs::Empty tugbotCenterMsg;
+	tugbotCenterGripperPub.publish(tugbotCenterMsg);
+	ros::spinOnce();
+	rate.sleep();
+	//while(!tugbotCenteredSuccess) {
+		//std_msgs::Empty tugbotCenterMsg;
+		//tugbotCenterGripperPub.publish(tugbotCenterMsg);
+		//ros::spinOnce();
+		//rate.sleep();
+	//}
+
+	std::cout << "gripper centered" << std::endl;
+	usleep(5000000);
+
+	while(!tugbotGripperAttached) {
+		std_msgs::Bool tugbotGripperAttachMsg;
+
+		tugbotGripperAttachMsg.data = true;
+		tugbotGripperAttachPub.publish(tugbotGripperAttachMsg);
+
+		ros::spinOnce();
+		rate.sleep();
+	}
+
+	std::cout << "gripper attached" << std::endl;
+	usleep(5000000);
+
 
 	while(ros::ok() && !allColumnsDone){
 		std_msgs::Bool liftingYMsg;

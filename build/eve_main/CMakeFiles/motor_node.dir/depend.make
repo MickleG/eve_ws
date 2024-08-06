@@ -8,6 +8,8 @@ eve_main/CMakeFiles/motor_node.dir/src/EndEffectorConfig.cpp.o: /root/eve_ws/src
 eve_main/CMakeFiles/motor_node.dir/src/MotorConfig.cpp.o: /root/eve_ws/src/eve_main/include/eve_main/MotorConfig.h
 eve_main/CMakeFiles/motor_node.dir/src/MotorConfig.cpp.o: /root/eve_ws/src/eve_main/src/MotorConfig.cpp
 
+eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/geometry_msgs/Twist.h
+eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/geometry_msgs/Vector3.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/ros/advertise_options.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/ros/advertise_service_options.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/ros/assert.h
@@ -66,6 +68,7 @@ eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/rosconsole/macros_generated.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/std_msgs/Bool.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/std_msgs/Int32.h
+eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/std_msgs/Int8.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/xmlrpcpp/XmlRpcDecl.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /opt/ros/noetic/include/xmlrpcpp/XmlRpcValue.h
 eve_main/CMakeFiles/motor_node.dir/src/motor_node.cpp.o: /root/eve_ws/devel/include/eve_main/EndEffectorPosition.h
