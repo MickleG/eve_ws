@@ -235,10 +235,12 @@ using namespace std;
             else { calibrationSuccess = 0; }
         }
 
+        // moving down along rail to hit limit switch at bottom
         if(startYCalib) {
             while(yMotor.driveState == 1) {
                 yMotor.setSpeed(-speed); // speed limiting y stage due to lower speed cap than left and right motors
                 yMotor.controlLoopY();
+                std::cout << yMotor.driveState << std::endl;
             }
 
             yMotor.setStepPosition(0);

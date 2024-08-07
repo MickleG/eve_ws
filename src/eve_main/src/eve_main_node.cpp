@@ -113,14 +113,14 @@ int main(int argc, char **argv) {
 	Cutter cutter(16);
 
 	//Create a servo motor: servo*(dynamyxel ID, mode, currentlimit, goalcurrent, min angle, max angle)
-  MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
-  MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
+	MotorXM430 servo1(1, 5, curLimit, goalCur, 225, 315);
+	MotorXM430 servo2(2, 5, curLimit, goalCur, 315, 225);
 
-  // servo1.PrintOperatingMode();
-  // servo2.PrintOperatingMode();
+	// servo1.PrintOperatingMode();
+	// servo2.PrintOperatingMode();
 
-  servo1.SetProfile(500, 400); // velocity=32000
-  servo2.SetProfile(500, 400);
+	servo1.SetProfile(500, 400); // velocity=32000
+	servo2.SetProfile(500, 400);
 
 	cutter.resetCut();
 	drop(servo1, servo2);
