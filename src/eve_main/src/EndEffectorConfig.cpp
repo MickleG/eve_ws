@@ -204,7 +204,7 @@ using namespace std;
             if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
-                goToPosition(0, 250, 100);
+                goToPosition(0, 200, 100);
                 startYCalib = true;
             }
 
@@ -228,7 +228,7 @@ using namespace std;
             if(rightMotor.driveState == 2)
             {
                 rightMotor.setStepPosition(0+256);
-                goToPosition(0, 250, 100);
+                goToPosition(0, 200, 100);
                 startYCalib = true;
             }
 

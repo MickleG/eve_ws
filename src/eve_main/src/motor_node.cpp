@@ -21,7 +21,7 @@ const int desiredZDistance = -10; // distance in mm that should be targeted for 
 const int zDeadbandBuffer = 5; // margin of error in mm allowed for z-axis visual servoing
 const int xDeadbandBuffer = 15; // margin of error in pixels allowed for x-axis visual servoing
 
-int ySpeeds[4] = {120, 0, -120, 0}; // Speeds that eve loops through when testing motor
+int ySpeeds[4] = {220, 220, 220, 220}; // Speeds that eve loops through when testing motor
 
 // local state variables for storing ROS message information
 bool harvesting = false;
@@ -36,7 +36,7 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
-bool testMotor = true; // set to true if you want to test motor movement without full autonomy
+bool testMotor = false; // set to true if you want to test motor movement without full autonomy
 
 
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
@@ -92,11 +92,11 @@ bool homeY(eve_main::HomeY::Request &req, eve_main::HomeY::Response &res) {
     mechanism.yMotor.setStepPosition(0);
     mechanism.calibrateZero(req.speed);
     mechanism.updateCurrentPosition();
-    mechanism.goToPosition(0, 250, 150);
+    mechanism.goToPosition(0, 200, 150);
     mechanism.updateCurrentPosition();
 
     // Reinitializing yMotor properties
-    mechanism.yMotor.setSpeed(300);
+    mechanism.yMotor.setSpeed(220);
     mechanism.yMotor.setAcceleration(50);
     
     return true;
@@ -143,8 +143,8 @@ int main(int argc, char **argv) {
 	// Initializaton of ROS publishers
 	ros::Publisher initialCenteringDonePub = nh.advertise<std_msgs::Bool>("initial_centering_done", 10);
 	ros::Publisher endEffectorPositionPub = nh.advertise<eve_main::EndEffectorPosition>("end_effector_position", 10);
-	ros::Publisher tugbotLidarSafetyAreaPub = nh.advertise<std_msgs::Int8>("wheels_controller/lidar_safety_area", 10);
-	ros::Publisher tugbotCmdVelPub = nh.advertise<geometry_msgs::Twist>("wheels_controller/cmd_vel", 10);
+	//ros::Publisher tugbotLidarSafetyAreaPub = nh.advertise<std_msgs::Int8>("wheels_controller/lidar_safety_area", 10);
+	//ros::Publisher tugbotCmdVelPub = nh.advertise<geometry_msgs::Twist>("wheels_controller/cmd_vel", 10);
 
 	// Initialization of ROS subscribers with corresponding callback functions
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 
 	ros::Rate rate(10000); // Setting a high ROS rate due to high frequency motor commands
 
-	int ySpeed = ySpeeds[0];
+	int ySpeed = 60;
 	int ySpeedCounter = 0;
 
 	// Initialize y motor properties
@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
 	// Calibration and moving to starting position at x=0, z=250
 	mechanism.calibrateZero(100);
 	mechanism.updateCurrentPosition();
-	mechanism.goToPosition(0, 250, 150);
+	mechanism.goToPosition(0, 200, 150);
 	mechanism.updateCurrentPosition();
 
 

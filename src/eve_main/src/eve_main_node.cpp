@@ -131,28 +131,24 @@ int main(int argc, char **argv) {
 	tugbotCenterGripperPub.publish(tugbotCenterMsg);
 	ros::spinOnce();
 	rate.sleep();
-	//while(!tugbotCenteredSuccess) {
-		//std_msgs::Empty tugbotCenterMsg;
-		//tugbotCenterGripperPub.publish(tugbotCenterMsg);
-		//ros::spinOnce();
-		//rate.sleep();
+
+
+
+	//std::cout << "gripper centered" << std::endl;
+	//usleep(5000000);
+
+	//while(!tugbotGripperAttached) {
+	//	std_msgs::Bool tugbotGripperAttachMsg;
+
+	//	tugbotGripperAttachMsg.data = true;
+	//	tugbotGripperAttachPub.publish(tugbotGripperAttachMsg);
+
+	//	ros::spinOnce();
+	//	rate.sleep();
 	//}
 
-	std::cout << "gripper centered" << std::endl;
-	usleep(5000000);
-
-	while(!tugbotGripperAttached) {
-		std_msgs::Bool tugbotGripperAttachMsg;
-
-		tugbotGripperAttachMsg.data = true;
-		tugbotGripperAttachPub.publish(tugbotGripperAttachMsg);
-
-		ros::spinOnce();
-		rate.sleep();
-	}
-
-	std::cout << "gripper attached" << std::endl;
-	usleep(5000000);
+	//std::cout << "gripper attached" << std::endl;
+	//usleep(5000000);
 
 
 	while(ros::ok() && !allColumnsDone){
