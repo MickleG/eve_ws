@@ -8,6 +8,7 @@
 #include <time.h>       // For NANOS function
 #include <cmath>        // For sqrt and other math functions
 #include <algorithm>
+#include <unistd.h>
 
 using namespace std;
 
@@ -140,6 +141,7 @@ using namespace std;
         stepCount = 0; // intialize motor position
         accSteps = 0;
         acceleration = 0.1;
+        debounceTime = 10000000; // 10ms
 
         setSpeed(0);
     }
@@ -460,11 +462,15 @@ using namespace std;
 
         bool bottomSwitch = digitalRead(limitBottom);
 
+        printf("bottomSwitch pressed? %d\n", bottomSwitch);
+        // usleep(1000);
+
         switch (driveState)
         {
             case 1:
 
                 motorDriveY(); // run the motor at setspeed until switch is determed to be pressed in the line below
+
 
                 if(bottomSwitch)
                 {

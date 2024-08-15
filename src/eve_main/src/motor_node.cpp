@@ -21,7 +21,9 @@ const int desiredZDistance = -10; // distance in mm that should be targeted for 
 const int zDeadbandBuffer = 5; // margin of error in mm allowed for z-axis visual servoing
 const int xDeadbandBuffer = 15; // margin of error in pixels allowed for x-axis visual servoing
 
-int ySpeeds[4] = {220, 220, 220, 220}; // Speeds that eve loops through when testing motor
+int ySpeedsMotorTesting[4] = {70, 0, -50, 0}; // Speeds that eve loops through when testing motor
+int ySpeed = 250;
+
 
 // local state variables for storing ROS message information
 bool harvesting = false;
@@ -92,11 +94,11 @@ bool homeY(eve_main::HomeY::Request &req, eve_main::HomeY::Response &res) {
     mechanism.yMotor.setStepPosition(0);
     mechanism.calibrateZero(req.speed);
     mechanism.updateCurrentPosition();
-    mechanism.goToPosition(0, 200, 150);
-    mechanism.updateCurrentPosition();
+    // mechanism.goToPosition(0, 180, 150);
+    // mechanism.updateCurrentPosition();
 
     // Reinitializing yMotor properties
-    mechanism.yMotor.setSpeed(220);
+    mechanism.yMotor.setSpeed(100);
     mechanism.yMotor.setAcceleration(50);
     
     return true;
@@ -165,16 +167,16 @@ int main(int argc, char **argv) {
 
 	ros::Rate rate(10000); // Setting a high ROS rate due to high frequency motor commands
 
-	int ySpeed = 60;
 	int ySpeedCounter = 0;
 
 	// Initialize y motor properties
 	mechanism.yMotor.setSpeed(ySpeed);
-	mechanism.yMotor.setAcceleration(10);
+	mechanism.yMotor.setAcceleration(100);
 
 
 	while(testMotor) {
-		for(int i = 0; i < 150000; i++) {
+		std::cout << "moving at speed: " << ySpeedsMotorTesting[ySpeedCounter] << std::endl;
+		for(int i = 0; i < 500000; i++) {
 			std_msgs::Int8 lidarSafetyAreaMsg;
 			geometry_msgs::Twist cmdVelMsg;
 			
@@ -182,7 +184,7 @@ int main(int argc, char **argv) {
 			mechanism.updateCurrentPosition();
 			mechanism.yMotor.controlLoopY();
 
-			lidarSafetyAreaMsg.data = 0;
+			lidarSafetyAreaMsg.data = 1;
 
 			cmdVelMsg.linear.x = float(ySpeed) * 0.001;
 			cmdVelMsg.linear.y = 0.0;
@@ -203,9 +205,8 @@ int main(int argc, char **argv) {
 		if(ySpeedCounter == 4) {
 			ySpeedCounter = 0;
 		}
-		ySpeed = ySpeeds[ySpeedCounter];
 
-		mechanism.yMotor.setSpeed(ySpeed);
+		mechanism.yMotor.setSpeed(ySpeedsMotorTesting[ySpeedCounter]);
 	}
 
 	// Blocking continuation of ndoe execution until image_processing_node publishes that camera is running
@@ -217,8 +218,11 @@ int main(int argc, char **argv) {
 	// Calibration and moving to starting position at x=0, z=250
 	mechanism.calibrateZero(100);
 	mechanism.updateCurrentPosition();
-	mechanism.goToPosition(0, 200, 150);
-	mechanism.updateCurrentPosition();
+
+	std::cout << "calibration done, time to harvest" << std::endl;
+
+	mechanism.yMotor.setSpeed(ySpeed);
+	mechanism.yMotor.setAcceleration(100);
 
 
 	// main motor loop, execution stops when the entire wall has been completed signified by allColumnsDone
@@ -240,6 +244,7 @@ int main(int argc, char **argv) {
 				} else {
 					// If x is not centered sufficiently within the xDeadbandBuffer, set servoing speed to be proportional to the offset, but cap values at value specified in mechanism.maxServoingSpeed so as to not fall outside of the positioning mechanism's capabilities
 					mechanism.xServoingSpeed = std::min(mechanism.maxServoingSpeed, xOffset);
+					
 				}
 
 				mechanism.moveInX(-mechanism.xServoingSpeed); // negative due to how the offset is calculated in image_processing_node
@@ -274,6 +279,8 @@ int main(int argc, char **argv) {
 
 		// Checking for if y needs to move, and is blocked by the liftingY ROS message set to false, the column being finished (all plants in column have been harvested), and if the end effector has not hugged the vine yet
 		if(liftingY && !columnDone && initialCenteringDone) {
+			// std::cout << "liftingY" << std::endl;
+			
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
 			mechanism.yMotor.controlLoopY();

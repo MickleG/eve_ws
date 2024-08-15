@@ -2,6 +2,7 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Empty.h"
+#include "geometry_msgs/Twist.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,8 +16,8 @@
 #include "eve_main/Cutter.h"
 #include "eve_main/Grip.h"
 
-const int totalPlantsPerVine = 3; // number of plants to be harvested on each vine
-const int totalColumns = 2; // number of vines on a greenhouse row
+const int totalPlantsPerVine = 16; // number of plants to be harvested on each vine
+const int totalColumns = 1; // number of vines on a greenhouse row
 
 bool dryRunMode = false; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
 
@@ -39,6 +40,10 @@ bool liftingY = false;
 bool columnDone = false;
 bool haltZServoing = false;
 bool allColumnsDone = false;
+bool blueDetected = false;
+bool leftBlueDetected = false;
+
+bool nextColumnReached = true;
 
 bool tugbotGripperAttached = false;
 bool tugbotCenteredSuccess = false;
@@ -75,6 +80,14 @@ void updateTugbotCenteredSuccess(const std_msgs::Bool::ConstPtr& msg) {
 	tugbotCenteredSuccess = msg -> data;
 }
 
+void updateBlueDetected(const std_msgs::Bool::ConstPtr& msg) {
+	blueDetected = msg -> data;
+}
+
+void updateLeftBlueDetected(const std_msgs::Bool::ConstPtr& msg) {
+	leftBlueDetected = msg -> data;
+}
+
 
 int main(int argc, char **argv) {
 	// Starting ROS
@@ -91,12 +104,13 @@ int main(int argc, char **argv) {
 	ros::Publisher allColumnsDonePub = nh.advertise<std_msgs::Bool>("all_columns_done", 10);
 	ros::Publisher tugbotCenterGripperPub = nh.advertise<std_msgs::Empty>("gripper/center", 10);
 	ros::Publisher tugbotGripperAttachPub = nh.advertise<std_msgs::Bool>("gripper/attach", 10);
+	ros::Publisher tugbotCmdVelPub = nh.advertise<geometry_msgs::Twist>("wheels_controller/cmd_vel", 10);
 
 	ros::Subscriber endEffectorPositionSub = nh.subscribe("end_effector_position", 10, updateEndEffectorPosition);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber harvestZoneDetectedSub = nh.subscribe("harvest_zone_detected", 10, updateHarvestZoneDetected);
-	ros::Subscriber tugbotGripperAttachedSub = nh.subscribe("gripper/attach_sucess", 10, updateTugbotGripperAttached); // the topic names have success misspelled because it is misspelled in the tugbot's software. lmao portugal moment
-	ros::Subscriber tugbotCenteredSuccessSub = nh.subscribe("gripper/center_sucess", 10, updateTugbotCenteredSuccess);
+	ros::Subscriber blueDetectedSub = nh.subscribe("blue_detected", 10, updateBlueDetected);
+	ros::Subscriber leftBlueDetectedSub = nh.subscribe("left_blue_detected", 10, updateLeftBlueDetected);
 
 	// Establishing ROS Client for Service calls
 	ros::ServiceClient getPositionClient = nh.serviceClient<eve_main::GetPosition>("get_position");
@@ -159,6 +173,7 @@ int main(int argc, char **argv) {
 		std_msgs::Bool haltZServoingMsg;
 		std_msgs::Bool initialCenteringDoneMsg;
 		std_msgs::Bool allColumnsDoneMsg;
+		geometry_msgs::Twist tugbotCmdVelMsg;
 
 		if(initialCenteringDone && !harvestZoneDetected && !columnDone) { // checking for if upwards y movement should occur
 			// publish true for liftingY to allow upwards y movement
@@ -166,6 +181,7 @@ int main(int argc, char **argv) {
 			liftingYMsg.data = true;
 			liftingYPub.publish(liftingYMsg);
 		} else if(harvestZoneDetected && !columnDone) { // checking if harvest zone has been reached and if the column still has plants to be harvested to start the harvesting process
+
 
 			getPositionClient.call(getPositionService); // collect current position at this moment in time to use for later
 
@@ -183,7 +199,7 @@ int main(int argc, char **argv) {
 			std::cout << "lifting in y to get to top of cup" << std::endl;
 
 			// this portion is still being worked on, will be removed once image processing is updated
-			while(abs(eeYPosition - currentY) <= 33) {
+			while(abs(eeYPosition - currentY) <= 52) {
 				liftingY = true;
 				liftingYMsg.data = true;
 				liftingYPub.publish(liftingYMsg);
@@ -205,7 +221,7 @@ int main(int argc, char **argv) {
 
 			if(!dryRunMode) { // performing the grip and cut as long as dryRunMode is off
 				grip(servo1, servo2);
-				usleep(50000);
+				usleep(500000);
 				cutter.cutPlant();
 			} else {
 				usleep(500000);
@@ -280,6 +296,13 @@ int main(int argc, char **argv) {
 		
 		}
 
+		// Checking if all columns have been completed, update local variables for publishing to ROS message
+		if(columnCount >= totalColumns) {
+			allColumnsDone = true;
+		} else {
+			allColumnsDone = false;
+		}
+
 		// If column is done (last plant has been harvested), then reset state variables to initial values and call homeY service to reset robot back to bottom of the rail
 		if(columnDone) {
 
@@ -289,11 +312,64 @@ int main(int argc, char **argv) {
 			initialCenteringDoneMsg.data = false;
 			initialCenteringDonePub.publish(initialCenteringDoneMsg);
 
+			columnDoneMsg.data = true;
+			columnDonePub.publish(columnDoneMsg);
+
 			ros::spinOnce();
 			rate.sleep();
 
 			homeYService.request.speed = homingYSpeed;
 			homeYClient.call(homeYService);
+
+			if(!allColumnsDone){
+
+				for(int i = 0; i < 5000; i++) {
+					tugbotCmdVelMsg.linear.x = 0.05;
+					tugbotCmdVelMsg.linear.y = 0.0;
+					tugbotCmdVelMsg.linear.z = 0.0;
+
+					tugbotCmdVelMsg.angular.x = 0.0;
+					tugbotCmdVelMsg.angular.y = 0.0;
+					tugbotCmdVelMsg.angular.z = 0.0;
+
+					std::cout << "moving away from old vine" << std::endl;
+
+					tugbotCmdVelPub.publish(tugbotCmdVelMsg);
+
+					ros::spinOnce();
+					rate.sleep();
+				}
+
+				while(!leftBlueDetected) {
+					tugbotCmdVelMsg.linear.x = 0.05;
+					tugbotCmdVelMsg.linear.y = 0.0;
+					tugbotCmdVelMsg.linear.z = 0.0;
+
+					tugbotCmdVelMsg.angular.x = 0.0;
+					tugbotCmdVelMsg.angular.y = 0.0;
+					tugbotCmdVelMsg.angular.z = 0.0;
+
+					// std::cout << "moving to vine" << std::endl;
+
+					tugbotCmdVelPub.publish(tugbotCmdVelMsg);
+
+					ros::spinOnce();
+					rate.sleep();
+				}
+
+
+				tugbotCmdVelMsg.linear.x = 0.0;
+				tugbotCmdVelMsg.linear.y = 0.0;
+				tugbotCmdVelMsg.linear.z = 0.0;
+
+				tugbotCmdVelMsg.angular.x = 0.0;
+				tugbotCmdVelMsg.angular.y = 0.0;
+				tugbotCmdVelMsg.angular.z = 0.0;
+
+				tugbotCmdVelPub.publish(tugbotCmdVelMsg);
+				ros::spinOnce();
+				rate.sleep();
+			}
 
 			columnDone = false;
 			
@@ -301,14 +377,11 @@ int main(int argc, char **argv) {
 
 			printf("homing done\n");
 
+			usleep(500000);
+
 		}
 
-		// Checking if all columns have been completed, update local variables for publishing to ROS message
-		if(columnCount >= totalColumns) {
-			allColumnsDone = true;
-		} else {
-			allColumnsDone = false;
-		}
+		
 
 		
 

@@ -373,6 +373,8 @@ void drop(MotorXM430 servo1, MotorXM430 servo2)
 	servo1.Goto(280);
 	servo2.Goto(260);
 
+	usleep(100000);
+
 }
 
 void grip(MotorXM430 servo1, MotorXM430 servo2)
@@ -386,13 +388,15 @@ void grip(MotorXM430 servo1, MotorXM430 servo2)
 	servo1.Goto(rightClosed);
 	servo2.Goto(leftClosed);
 
-	while((abs(servo1.ReadAngle() - rightClosed) >= tolerance && abs(servo2.ReadAngle() - leftClosed) >= tolerance) && servo1.ReadCurrent() <= servo1.m_current_limit && servo2.ReadCurrent() <= servo2.m_current_limit)
-	{
-		printf("GRIP ACTIVE\n");
-		printf("Motor %d, current: %d\n",servo1.GetID(), abs(servo1.ReadCurrent()));
-		printf("Motor %d, current: %d\n\n",servo2.GetID(), abs(servo2.ReadCurrent()));
+	// while((abs(servo1.ReadAngle() - rightClosed) >= tolerance && abs(servo2.ReadAngle() - leftClosed) >= tolerance) && servo1.ReadCurrent() <= servo1.m_current_limit && servo2.ReadCurrent() <= servo2.m_current_limit)
+	// {
+	// 	printf("GRIP ACTIVE\n");
+	// 	printf("Motor %d, current: %d\n",servo1.GetID(), abs(servo1.ReadCurrent()));
+	// 	printf("Motor %d, current: %d\n\n",servo2.GetID(), abs(servo2.ReadCurrent()));
 
-	}
+	// }
+
+	usleep(100000);
 
 	servo1.grabSuccess = true;
 	servo2.grabSuccess = true;

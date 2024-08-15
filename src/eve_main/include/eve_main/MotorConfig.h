@@ -9,7 +9,7 @@ class MotorConfig
 private:
 
     const float deadBandSpeed = 1.0;
-    const uint64_t debounceTime = 1000000; // 1 ms
+    uint64_t debounceTime = 1000000; // 1 ms
     const float goalAcceleration = 0.1; // m/s per step
 
     uint64_t accInterval = 1000000; // nanoseconds -- interval to increase currentSpeed

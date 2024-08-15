@@ -27,12 +27,15 @@ bool initialCenteringDone = false;
 bool harvestZoneDetected = false;
 bool blueDetected = false;
 bool liftingY = false;
+bool columnDone = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
+bool leftBlueDetected = false;
 
 int v_avg = 0;
 int goalZ = -1;
 int xOffset = 0;
+int nextVineOffset = std::numeric_limits<int>::max();
 
 
 
@@ -54,6 +57,11 @@ void updateHarvesting(const std_msgs::Bool::ConstPtr& msg) {
 void updateInitialCenteringDone(const std_msgs::Bool::ConstPtr& msg) {
 	initialCenteringDone = msg -> data;
 }
+
+void updateColumnDone(const std_msgs::Bool::ConstPtr& msg) {
+	columnDone = msg -> data;
+}
+
 void updateLiftingY(const std_msgs::Bool::ConstPtr& msg) {
 	liftingY = msg -> data;
 }
@@ -73,12 +81,14 @@ int main(int argc, char **argv) {
 	ros::Publisher goalZPub = nh.advertise<std_msgs::Int32>("goal_z", 10);
 	ros::Publisher xOffsetPub = nh.advertise<std_msgs::Int32>("x_offset", 10);
 	ros::Publisher cameraRunningPub = nh.advertise<std_msgs::Bool>("camera_running", 10);
+	ros::Publisher leftBlueDetectedPub = nh.advertise<std_msgs::Bool>("left_blue_detected", 10);
 
 	// Initialization of ROS subscribers with corresponding callback functions
 	ros::Subscriber harvestingSub = nh.subscribe("harvesting", 10, updateHarvesting);
 	ros::Subscriber initialCenteringDoneSub = nh.subscribe("initial_centering_done", 10, updateInitialCenteringDone);
 	ros::Subscriber liftingYSub = nh.subscribe("lifting_y", 10, updateLiftingY);
 	ros::Subscriber allColumnsDoneSub = nh.subscribe("all_columns_done", 10, updateAllColumnsDone);
+	ros::Subscriber columnDoneSub = nh.subscribe("column_done", 10, updateColumnDone);
 
 
 	ros::Rate rate(15); // ROS rate set to 15 Hz in accordance with RealSense supported framerate for both rgb and depth streams
@@ -92,7 +102,7 @@ int main(int argc, char **argv) {
 
 	// Align depth image to color image through camera extrinsics
 	rs2::align align_to_color(RS2_STREAM_COLOR);
-	
+
 	
 	while(ros::ok() && !allColumnsDone) {
 		std_msgs::Bool blueDetectedMsg;
@@ -100,6 +110,7 @@ int main(int argc, char **argv) {
 		std_msgs::Int32 goalZMsg;
 		std_msgs::Int32 xOffsetMsg;
 		std_msgs::Bool cameraRunningMsg;
+		std_msgs::Bool leftBlueDetectedMsg;
 
 		rs2::frameset frames = pipe.wait_for_frames();
 		frames = align_to_color.process(frames);
@@ -208,6 +219,8 @@ int main(int argc, char **argv) {
 			}
 		}
 
+		avgCupU = avgCupU / float(totalCupPixels);
+
 		// cv::imshow("cup", cupMask);
 
 
@@ -233,14 +246,14 @@ int main(int argc, char **argv) {
 
 				v_avg = int(v_avg_storage / float(v_counter));
 
-				if(v_avg >= 200 && !harvesting && initialCenteringDone) {
+				if(v_avg >= 120 && v_avg < 180 && !harvesting && initialCenteringDone) {
 				// if(v_avg >= 150 && !harvesting && initialCenteringDone) {
 					harvestZoneDetected = true;
-					cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
+					// cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(0, 255, 0), -1);
 
 				} else {
 					harvestZoneDetected = false;
-					cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(255, 0, 255), -1);
+					// cv::circle(rgb_image, cv::Point(int(resolution[0] / 2), v_avg), 5, cv::Scalar(255, 0, 255), -1);
 				}
 
 			} else {
@@ -261,6 +274,16 @@ int main(int argc, char **argv) {
 			blueDetected = false;
 		}
 
+		printf("avgCupU: %d, columnDone: %d\n", int(avgCupU), columnDone);
+
+		if(int(avgCupU) >= 220 && columnDone && int(avgCupU) <= 300) {
+			leftBlueDetected = true;
+		} else {
+			leftBlueDetected = false;
+		}
+
+		//columnDone stuff
+
 		// Creating vineMask and depthImage to use for visual servoing in x and z, respectively
 
 		cv::Mat vineMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
@@ -279,7 +302,7 @@ int main(int argc, char **argv) {
 				bool hue_condition = !(40 <= hsv_pixel[0] && 80 >= hsv_pixel[0]);
 				bool sat_condition = 0 <= hsv_pixel[1] && 150 >= hsv_pixel[1];
 
-				if (val < 0.25 && hue_condition && sat_condition && val != 0 && croppingMask.at<unsigned char>(v, u) == 255) { // hue_condition &&
+				if (val < 0.15 && hue_condition && sat_condition && val != 0 && croppingMask.at<unsigned char>(v, u) == 255) { // hue_condition &&
 					vineMask.at<unsigned char>(v, u) = 255;
 				}
 			}
@@ -355,6 +378,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
+
 		cv::Mat smallest_values = cv::Mat::zeros(vineMask.size(), CV_8UC1);
 		if (largestContourIndex != -1) {
 			cv::drawContours(smallest_values, contoursRib, largestContourIndex, cv::Scalar(255), cv::FILLED);
@@ -365,7 +389,7 @@ int main(int argc, char **argv) {
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
 
-		//cv::imshow("vine_rib_filtered", smallest_values_filtered);
+	//	cv::imshow("vine_rib_filtered", smallest_values_filtered);
 
 		float min_z_u = 0;
 		float min_z_v = 0;
@@ -405,7 +429,7 @@ int main(int argc, char **argv) {
 
 		int avg_u = int((max_u + min_u) / 2);
 
-		xOffset = int(resolution[0] / 2) - avg_u; // subtracting u_centerOfImage from u_detectedVineRib to get the vine's u offset (pixels in horizontal direction)
+		xOffset = int(resolution[0] / 2) + 50 - avg_u; // subtracting u_centerOfImage from u_detectedVineRib to get the vine's u offset (pixels in horizontal direction)
 
 
 		cv::Point centerX(avg_u, int(resolution[1] / 2));
@@ -417,11 +441,13 @@ int main(int argc, char **argv) {
 		harvestZoneDetectedMsg.data = harvestZoneDetected;
 		goalZMsg.data = goalZ;
 		xOffsetMsg.data = xOffset;
-		
+		leftBlueDetectedMsg.data = leftBlueDetected;
+
 		blueDetectedPub.publish(blueDetectedMsg);
 		harvestZoneDetectedPub.publish(harvestZoneDetectedMsg);
 		goalZPub.publish(goalZMsg);
 		xOffsetPub.publish(xOffsetMsg);
+		leftBlueDetectedPub.publish(leftBlueDetectedMsg);
 
 		cv::waitKey(1);
 

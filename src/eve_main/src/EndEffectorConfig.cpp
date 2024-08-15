@@ -46,7 +46,7 @@ using namespace std;
 
         leftMotor.setHardware(17, 18, 5, 1);
         rightMotor.setHardware(4, 27, 2, 3);
-        yMotor.setHardware(25, 24, 6); // defines the y stage motor, up is positive speed
+        yMotor.setHardware(24, 25, 6); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);
@@ -104,7 +104,7 @@ using namespace std;
 
         zPosition = sqrt((linkLength * linkLength) - (basePartial * basePartial)) + 20; // current z cord of end effector (dist from outer pin to motor plane)
         xPosition = ((leftMotorPosition*-1) + rightMotorPosition) / 2; // current x cord of end effector relative to center plane of macron rail
-        yPosition = yMotor.stepCount * revPerStep * mmPerRevY;
+        yPosition = yMotor.stepCount * revPerStepY * mmPerRevY;
     }
 
     void EndEffectorConfig::goToPosition(float xCord, float zCord, float speed)
@@ -204,7 +204,7 @@ using namespace std;
             if(leftMotor.driveState == -1)
             {
                 leftMotor.setStepPosition(32000-256);
-                goToPosition(0, 200, 100);
+                goToPosition(0, 180, 100);
                 startYCalib = true;
             }
 
@@ -228,7 +228,7 @@ using namespace std;
             if(rightMotor.driveState == 2)
             {
                 rightMotor.setStepPosition(0+256);
-                goToPosition(0, 200, 100);
+                goToPosition(0, 180, 100);
                 startYCalib = true;
             }
 
@@ -240,7 +240,8 @@ using namespace std;
             while(yMotor.driveState == 1) {
                 yMotor.setSpeed(-speed); // speed limiting y stage due to lower speed cap than left and right motors
                 yMotor.controlLoopY();
-                std::cout << yMotor.driveState << std::endl;
+                //printf("drivestate is: %d\n", yMotor.driveState);
+								//usleep(100);
             }
 
             yMotor.setStepPosition(0);

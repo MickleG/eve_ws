@@ -15,8 +15,9 @@ class EndEffectorConfig
     private:
 
         const float stepPerRev = 3200.0;
-        const float yStageGearReduction = 10;
-        const float revPerStep = 1.0 / (stepPerRev * yStageGearReduction);
+		const float stepPerRevY = 6400.0;
+        const float yStageGearReduction = 5;
+        const float revPerStepY = 1.0 / (stepPerRevY * yStageGearReduction);
         const float mmPerRev = 25.0;
         const float mmPerRevY = 150.0;
         const float linkLength = 350.0;
@@ -57,7 +58,7 @@ class EndEffectorConfig
         int goalZ = -1;
         int xServoingSpeed = -1;
         int zServoingSpeed = -1;
-        int maxServoingSpeed = 130;
+        int maxServoingSpeed = 70;
 
         //float xDirection; // x component of direction vector (direction vector = vector of magnitude 1.0)
         //float zDirection; // z component of direction vector (direction vector = vector of magnitude 1.0)
