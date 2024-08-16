@@ -38,7 +38,7 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
-bool testMotor = false; // set to true if you want to test motor movement without full autonomy
+bool testMotor = true; // set to true if you want to test motor movement without full autonomy
 
 
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
@@ -176,29 +176,10 @@ int main(int argc, char **argv) {
 
 	while(testMotor) {
 		std::cout << "moving at speed: " << ySpeedsMotorTesting[ySpeedCounter] << std::endl;
-		for(int i = 0; i < 500000; i++) {
-			std_msgs::Int8 lidarSafetyAreaMsg;
-			geometry_msgs::Twist cmdVelMsg;
-			
+		for(int i = 0; i < 5000000; i++) {
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
 			mechanism.yMotor.controlLoopY();
-
-			lidarSafetyAreaMsg.data = 1;
-
-			cmdVelMsg.linear.x = float(ySpeed) * 0.001;
-			cmdVelMsg.linear.y = 0.0;
-			cmdVelMsg.linear.z = 0.0;
-
-			cmdVelMsg.angular.x = 0.0;
-			cmdVelMsg.angular.y = 0.0;
-			cmdVelMsg.angular.z = 0.0;
-
-			//tugbotLidarSafetyAreaPub.publish(lidarSafetyAreaMsg);
-			//tugbotCmdVelPub.publish(cmdVelMsg);
-
-			//ros::spinOnce();
-			//rate.sleep();
 		}
 
 		ySpeedCounter++;

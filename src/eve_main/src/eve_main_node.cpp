@@ -16,10 +16,10 @@
 #include "eve_main/Cutter.h"
 #include "eve_main/Grip.h"
 
-const int totalPlantsPerVine = 16; // number of plants to be harvested on each vine
-const int totalColumns = 1; // number of vines on a greenhouse row
+const int totalPlantsPerVine = 3; // number of plants to be harvested on each vine
+const int totalColumns = 3; // number of vines on a greenhouse row
 
-bool dryRunMode = false; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
+bool dryRunMode = true; // turn to true if you want to skip gripping and cutting to check if positioning and image processing works without actually harvesting the plants
 
 const float dropZoneX = 0; // location in x (mm) at which to drop plants
 const float dropZoneZ = 150; // location in z (mm) at which to drop plants

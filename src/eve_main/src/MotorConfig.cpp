@@ -353,7 +353,7 @@ using namespace std;
         {
             digitalWrite(stepPin, phase); // motor coils HIGH or LOW (1 or 0)
             prevTimeStep = nanos(); // log the time stamp for step
-            stepCount += (-motorDir*phase); // only add stepCount when coils on (phase = 1). Negative due to motor direction positive driving y stage downwards
+            stepCount += (motorDir*phase); // only add stepCount when coils on (phase = 1). Negative due to motor direction positive driving y stage downwards
             phase = !phase; // switch phase b/t 0 and 1 
         }
 
@@ -462,7 +462,7 @@ using namespace std;
 
         bool bottomSwitch = digitalRead(limitBottom);
 
-        printf("bottomSwitch pressed? %d\n", bottomSwitch);
+        printf("motorDir: %d, driveState: %d\n", motorDir, driveState);
         // usleep(1000);
 
         switch (driveState)
@@ -498,7 +498,7 @@ using namespace std;
 
                 if (bottomSwitch) // if limitBottom remains pressed
                 {
-                    if (motorDir < 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    if (motorDir > 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
                     else {currentSpeed = 0;} // report 0 motor speed even though speed commanded might be positive
 
                     limTimeStep = nanos();
@@ -506,7 +506,7 @@ using namespace std;
 
                 else if ((currentTimeStep - limTimeStep) < debounceTime) // 1ms debounce time after switch is released, only allows travel in opposite direction to switch 
                 {
-                    if (motorDir < 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    if (motorDir > 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
                     else {currentSpeed = 0;}
                 }
 

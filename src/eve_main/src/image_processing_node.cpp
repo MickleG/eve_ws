@@ -274,7 +274,7 @@ int main(int argc, char **argv) {
 			blueDetected = false;
 		}
 
-		printf("avgCupU: %d, columnDone: %d\n", int(avgCupU), columnDone);
+		//printf("avgCupU: %d, columnDone: %d\n", int(avgCupU), columnDone);
 
 		if(int(avgCupU) >= 220 && columnDone && int(avgCupU) <= 300) {
 			leftBlueDetected = true;
