@@ -498,7 +498,7 @@ using namespace std;
 
                 if (bottomSwitch) // if limitBottom remains pressed
                 {
-                    if (motorDir > 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    if (motorDir <= 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
                     else {currentSpeed = 0;} // report 0 motor speed even though speed commanded might be positive
 
                     limTimeStep = nanos();
@@ -506,7 +506,7 @@ using namespace std;
 
                 else if ((currentTimeStep - limTimeStep) < debounceTime) // 1ms debounce time after switch is released, only allows travel in opposite direction to switch 
                 {
-                    if (motorDir > 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
+                    if (motorDir <= 0) { motorDriveY(); } // only allows travel in opposite direction to outside switch 
                     else {currentSpeed = 0;}
                 }
 

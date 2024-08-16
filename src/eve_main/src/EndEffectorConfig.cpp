@@ -46,7 +46,7 @@ using namespace std;
 
         leftMotor.setHardware(17, 18, 5, 1);
         rightMotor.setHardware(4, 27, 2, 3);
-        yMotor.setHardware(24, 25, 6); // defines the y stage motor, up is positive speed
+        yMotor.setHardware(21, 25, 6); // defines the y stage motor, up is positive speed
 
 
         leftMotor.setStepPosition(left);

@@ -38,7 +38,7 @@ bool haltZServoing = false;
 bool allColumnsDone = false;
 bool cameraRunning = false;
 
-bool testMotor = true; // set to true if you want to test motor movement without full autonomy
+bool testMotor = false; // set to true if you want to test motor movement without full autonomy
 
 
 int xOffset = 0; // used for storing current xOffset in pixels that the vine rib is from the center of the camera frame. Used for x-axis visual servoing - this value should be within xDeadbandBUffer pixels of center of realsense image frame when x-axis visual servoing is complete
@@ -169,13 +169,13 @@ int main(int argc, char **argv) {
 
 	int ySpeedCounter = 0;
 
-	// Initialize y motor properties
-	mechanism.yMotor.setSpeed(ySpeed);
-	mechanism.yMotor.setAcceleration(100);
-
 
 	while(testMotor) {
-		std::cout << "moving at speed: " << ySpeedsMotorTesting[ySpeedCounter] << std::endl;
+		printf("moving at speed: %d and motorDir is: %d\n", ySpeedsMotorTesting[ySpeedCounter], mechanism.yMotor.motorDir);
+
+		mechanism.yMotor.setSpeed(ySpeedsMotorTesting[ySpeedCounter]);
+		mechanism.yMotor.setAcceleration(1);
+
 		for(int i = 0; i < 5000000; i++) {
 			mechanism.yMotor.motorDriveY();
 			mechanism.updateCurrentPosition();
