@@ -22,7 +22,7 @@ const int zDeadbandBuffer = 5; // margin of error in mm allowed for z-axis visua
 const int xDeadbandBuffer = 15; // margin of error in pixels allowed for x-axis visual servoing
 
 int ySpeedsMotorTesting[4] = {70, 0, -50, 0}; // Speeds that eve loops through when testing motor
-int ySpeed = 250;
+int ySpeed = 150;
 
 
 // local state variables for storing ROS message information
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
 	std::cout << "calibration done, time to harvest" << std::endl;
 
 	mechanism.yMotor.setSpeed(ySpeed);
-	mechanism.yMotor.setAcceleration(100);
+	mechanism.yMotor.setAcceleration(30);
 
 
 	// main motor loop, execution stops when the entire wall has been completed signified by allColumnsDone
@@ -250,11 +250,12 @@ int main(int argc, char **argv) {
 
 			// Since xServoingSpeed and zServoingSpeed are initialized to -1, this check is true once both x and z have been successfully centered at least once
 			if(mechanism.xServoingSpeed == 0 && mechanism.zServoingSpeed == 0) {
-				mechanism.centeredCounter++;
+				mechanism.centeredCounter = 1;
+				//mechanism.centeredCounter++;
 				// Prevention of integer overflow
-				if(mechanism.centeredCounter >= std::numeric_limits<int>::max()) {
-					mechanism.centeredCounter = 1;
-				}
+				//if(mechanism.centeredCounter >= std::numeric_limits<int>::max()) {
+					//mechanism.centeredCounter = 1;
+				//}
 			}
 		}
 

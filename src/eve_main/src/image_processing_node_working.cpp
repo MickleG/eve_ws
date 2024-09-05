@@ -103,35 +103,6 @@ int main(int argc, char **argv) {
 	// Align depth image to color image through camera extrinsics
 	rs2::align align_to_color(RS2_STREAM_COLOR);
 
-	cv::Mat original_rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC3);
-	cv::Mat original_depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1);
-	cv::Mat hsv_image;
-
-	cv::Mat croppingMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-
-	cv::Rect roi(cropped_gripper_bounds[0], 0, cropped_gripper_bounds[1] - cropped_gripper_bounds[0], resolution[1]);
-
-	cv::Mat rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-	cv::Mat depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1);
-
-	cv::Mat cupMaskBeforeLargest(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-	cv::Scalar lowerHSV(100, 200, 0); // lower bound for cup
-	cv::Scalar upperHSV(150, 255, 255); // upper bound for cup
-
-	cv::Mat kernel = cv::Mat::ones(5, 5, CV_8U);
-
-	cv::Mat cupMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-
-	cv::Mat vineMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-	cv::Mat depthImage = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_64F);
-
-	cv::Mat verticalStructure = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 20));
-	cv::Mat filtered_smallest_values_raw;
-
-	cv::Mat smallest_values = cv::Mat::zeros(vineMask.size(), CV_8UC1);
-
-	cv::Mat smallest_values_filtered;
-
 	
 	while(ros::ok() && !allColumnsDone) {
 		std_msgs::Bool blueDetectedMsg;
@@ -163,12 +134,19 @@ int main(int argc, char **argv) {
 		rs2::depth_frame depth_frame = frames.get_depth_frame().as<rs2::depth_frame>();
 
 		// Convert RealSense frame to OpenCV matrix
-		original_rgb_image.data = (uchar*)color_frame.get_data();
+		cv::Mat original_rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC3, (void*)color_frame.get_data(), cv::Mat::AUTO_STEP);
 		cv::Mat hsv_image;
-		original_depth_image.data = (uchar*)depth_frame.get_data();
+		cv::Mat original_depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
 
-		
+		//cv::imshow("original_image", original_rgb_image);
+
+		cv::Mat croppingMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
+
+		// Cropping image to remove gripper fingers
+		cv::Rect roi(cropped_gripper_bounds[0], 0, cropped_gripper_bounds[1] - cropped_gripper_bounds[0], resolution[1]);
 		croppingMask(roi) = 255;
+		cv::Mat rgb_image(cv::Size(resolution[0], resolution[1]), CV_8UC1);
+		cv::Mat depth_image(cv::Size(resolution[0], resolution[1]), CV_16UC1);
 		cv::bitwise_and(original_rgb_image, original_rgb_image, rgb_image, croppingMask);
 		cv::bitwise_and(original_depth_image, original_depth_image, depth_image, croppingMask);
 
@@ -177,14 +155,19 @@ int main(int argc, char **argv) {
 		// Changing color space from BGR to HSV, allowing for more robust color detection
 		cv::cvtColor(rgb_image, hsv_image, COLOR_BGR2HSV, 0);
 
+		// cv::imshow("hsv", hsv_image);
 
 
 		// Creating cup mask using HSV thresholding
-		
+		cv::Mat cupMaskBeforeLargest(cv::Size(resolution[0], resolution[1]), CV_8UC1);
+		cv::Scalar lowerHSV(100, 200, 0); // lower bound for cup
+		cv::Scalar upperHSV(150, 255, 255); // upper bound for cup
 		cv::inRange(hsv_image, lowerHSV, upperHSV, cupMaskBeforeLargest);
 
+		// cv::imshow("cupMaskBeforeLargest beforemorph", cupMaskBeforeLargest);
 
 		// Morphology to clean image of noise
+		cv::Mat kernel = cv::Mat::ones(5, 5, CV_8U);
 		cv::morphologyEx(cupMaskBeforeLargest, cupMaskBeforeLargest, cv::MORPH_CLOSE, kernel);
 		cv::morphologyEx(cupMaskBeforeLargest, cupMaskBeforeLargest, cv::MORPH_OPEN, kernel);
 
@@ -207,7 +190,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		cupMask = cv::Mat::zeros(cupMaskBeforeLargest.size(), CV_8UC1);
+		cv::Mat cupMask = cv::Mat::zeros(cupMaskBeforeLargest.size(), CV_8UC1);
 
 		// Adding only points part of largest blob to cupMask
 		if(largest_contour_index != -1) {
@@ -237,6 +220,8 @@ int main(int argc, char **argv) {
 		}
 
 		avgCupU = avgCupU / float(totalCupPixels);
+
+		// cv::imshow("cup", cupMask);
 
 
 		std::sort(cupPoints.begin(), cupPoints.end(), [](const int& a, const int& b) {
@@ -289,6 +274,7 @@ int main(int argc, char **argv) {
 			blueDetected = false;
 		}
 
+		//printf("avgCupU: %d, columnDone: %d\n", int(avgCupU), columnDone);
 
 		if(int(avgCupU) >= 220 && columnDone && int(avgCupU) <= 300) {
 			leftBlueDetected = true;
@@ -300,8 +286,8 @@ int main(int argc, char **argv) {
 
 		// Creating vineMask and depthImage to use for visual servoing in x and z, respectively
 
-		vineMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
-		depthImage = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_64F);
+		cv::Mat vineMask = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_8UC1);
+		cv::Mat depthImage = cv::Mat::zeros(cv::Size(resolution[0], resolution[1]), CV_64F);
             
 
 		// Extracting vine using distance away from camera (cutting away far background points greater than 0.2 m away) and HSV color thresholding (cutting away color mismatches from the vine)
@@ -322,6 +308,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
+		// cv::imshow("vinemask premorph", vineMask);
 
 		// // Removing cups from vineMask to improve vine masking (as the gray color on the vines is a blue-based hue)
 		cv::subtract(vineMask, cupMask, vineMask);
@@ -331,6 +318,7 @@ int main(int argc, char **argv) {
 		// More morphology to clean vineMask of noise
 		cv::morphologyEx(vineMask, vineMask, cv::MORPH_OPEN, bigKernel);
 
+		// cv::imshow("vineMask prefilter", vineMask);
 
 
 		// Collecting locations of n lowest depth points (n = 1000), adding to mask called smallest_values.
@@ -369,7 +357,8 @@ int main(int argc, char **argv) {
 
 		// Using a tall and thin kernel in order to extract similar tall and thin features from the image.
 		// This extracts the front rib of the vine, which is what we want to servo off of
-		
+		cv::Mat verticalStructure = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 20));
+		cv::Mat filtered_smallest_values_raw;
 		cv::erode(smallest_values_raw, smallest_values_raw, verticalStructure);
 		cv::dilate(smallest_values_raw, smallest_values_raw, verticalStructure);
 
@@ -390,12 +379,12 @@ int main(int argc, char **argv) {
 		}
 
 
-		smallest_values = cv::Mat::zeros(vineMask.size(), CV_8UC1);
+		cv::Mat smallest_values = cv::Mat::zeros(vineMask.size(), CV_8UC1);
 		if (largestContourIndex != -1) {
 			cv::drawContours(smallest_values, contoursRib, largestContourIndex, cv::Scalar(255), cv::FILLED);
 		}
 
-		
+		cv::Mat smallest_values_filtered;
 
 		// extracting the points from original smallest_values_raw mask that lie within the idealized vertical mask
 		cv::bitwise_and(smallest_values, smallest_values_raw, smallest_values_filtered);
@@ -460,7 +449,7 @@ int main(int argc, char **argv) {
 		xOffsetPub.publish(xOffsetMsg);
 		leftBlueDetectedPub.publish(leftBlueDetectedMsg);
 
-		// cv::waitKey(1);
+		cv::waitKey(1);
 
 		ros::spinOnce();
 		rate.sleep();
@@ -470,4 +459,3 @@ int main(int argc, char **argv) {
 	
 	return(0);
 }
-
